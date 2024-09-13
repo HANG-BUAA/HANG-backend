@@ -1,17 +1,15 @@
 package router
 
 import (
+	"HANG-backend/src/api"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func InitUserRoutes() {
 	RegisterRoute(func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup) {
-		rgPublic.POST("/login", func(context *gin.Context) {
-			context.AbortWithStatusJSON(http.StatusOK, gin.H{
-				"msg": "Login Success",
-			})
-		})
+		userApi := api.NewUserApi()
+		rgPublic.POST("/login", userApi.Login)
 
 		rgAuthUser := rgAuth.Group("/user")
 		rgAuthUser.GET("", func(c *gin.Context) {

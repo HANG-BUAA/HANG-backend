@@ -1,17 +1,25 @@
 mode:
-  develop: true  # 调试模式
+  develop: true # 调试模式
 
 server:
-  port: 8000  # 服务启动的端口号
+  port: 8000 # 服务启动的端口号
 
 db:
   mysql:
-    maxIdleConn: 10  # 最多空闲链接数
-    maxOpenConn: 10  # 最多打开连接数
+    username: root
+    password: 123456
+    host: 127.0.0.1
+    port: 3306
+    dbname: hang
+    maxIdleConn: 10 # 最多空闲链接数
+    maxOpenConn: 10 # 最多打开连接数
 
+jwt:
+  tokenExpire: 30 # token有效时长（分钟）
+  signingKey: hang.com # 签名使用的 key
 
 log:
-  MaxSize: 1  # 日志文件最大的尺寸(M)，超限后自动分割
-  MaxBackups: 10  # 保留旧文件的最大个数
-  MaxAge: 90  # 保留旧文件的最大天数
-  Compress: false  # 是否开启压缩
+  MaxSize: 1 # 日志文件最大的尺寸(M)，超限后自动分割
+  MaxBackups: 10 # 保留旧文件的最大个数
+  MaxAge: 90 # 保留旧文件的最大天数
+  Compress: false # 是否开启压缩
