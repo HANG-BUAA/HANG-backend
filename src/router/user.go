@@ -1,31 +1,23 @@
 package router
 
 import (
-	"HANG-backend/src/api"
-	"github.com/gin-gonic/gin"
-	"net/http"
+    "HANG-backend/src/api"
+    "github.com/gin-gonic/gin"
 )
 
 func InitUserRoutes() {
-	RegisterRoute(func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup) {
-		userApi := api.NewUserApi()
-		rgPublic.POST("/login", userApi.Login)
+    RegisterRoute(func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup) {
+        userApi := api.NewUserApi()
+        {
+            rgPublic.POST("/login", userApi.Login)
+            rgPublic.POST("/register", userApi.Register)
+        }
 
-		rgAuthUser := rgAuth.Group("/user")
-		rgAuthUser.GET("", func(c *gin.Context) {
-			c.AbortWithStatusJSON(http.StatusOK, gin.H{
-				"data": []map[string]any{
-					{"id": 1, "name": "zs"},
-					{"id": 2, "name": "ls"},
-				},
-			})
-		})
+        rgAuthUser := rgAuth.Group("/user")
+        {
+            rgAuthUser.GET("", func(context *gin.Context) {
 
-		rgAuthUser.GET("/:id", func(c *gin.Context) {
-			c.AbortWithStatusJSON(http.StatusOK, gin.H{
-				"id":   1,
-				"name": "zs",
-			})
-		})
-	})
+            })
+        }
+    })
 }

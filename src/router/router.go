@@ -4,6 +4,7 @@ import (
 	"HANG-backend/src/api"
 	_ "HANG-backend/src/docs"
 	"HANG-backend/src/global"
+	"HANG-backend/src/middleware"
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -37,12 +38,14 @@ func InitRouter() {
 	defer cancelCtx()
 
 	r := gin.Default()
-	pingApi := api.NewPingApi() // 测试连通
-	r.POST("/ping", pingApi.Ping)
+	r.Use(middleware.Cors())    // 挂载跨域中间件
+	pingApi := api.NewPingApi() // 测试连通接口
+	r.GET("/ping", pingApi.Ping)
 
 	// 公共接口与用户鉴权接口
 	rgPublic := r.Group("/api/v1/public")
 	rgAuth := r.Group("/api/v1")
+	rgAuth.Use(middleware.Auth()) // 登录鉴权
 
 	// 注册基础平台路由（添加到gfnRoutes中）
 	initBasePlatformRoutes()
