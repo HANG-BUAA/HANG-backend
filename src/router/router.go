@@ -6,11 +6,14 @@ import (
 	"HANG-backend/src/global"
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -42,7 +45,10 @@ func InitRouter() {
 	rgAuth := r.Group("/api/v1")
 
 	// 注册基础平台路由（添加到gfnRoutes中）
-	InitBasePlatformRoutes()
+	initBasePlatformRoutes()
+
+	// 注册自定义验证器
+	registerCustomValidator()
 
 	// 循环遍历gfnRoutes，执行其中的函数
 	for _, fnRegisterRoute := range gfnRoutes {
@@ -82,6 +88,20 @@ func InitRouter() {
 	global.Logger.Info("Server Shutdown Success")
 }
 
-func InitBasePlatformRoutes() {
+func initBasePlatformRoutes() {
 	InitUserRoutes()
+}
+
+// 自定义校验器
+func registerCustomValidator() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		_ = v.RegisterValidation("first_is_a", func(fl validator.FieldLevel) bool {
+			if value, ok := fl.Field().Interface().(string); ok {
+				if value != "" && strings.Index(value, "a") == 0 {
+					return true
+				}
+			}
+			return false
+		})
+	}
 }
