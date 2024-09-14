@@ -13,7 +13,7 @@ func TestSendEmail(t *testing.T) {
 	e.Subject = "Your Verification Code"
 	e.Text = []byte("Your verification code is: " + "22371426")
 
-	err := e.Send("smtp.163.com:25", smtp.PlainAuth("", "18646154381@163.com", "MSTLOQJPDZCLVMOZ", "smtp.163.com"))
+	err := e.Send("smtp.163.com:25", smtp.PlainAuth("", "18646154381@163.com", "", "smtp.163.com"))
 	if err != nil {
 		t.Error(err)
 	}

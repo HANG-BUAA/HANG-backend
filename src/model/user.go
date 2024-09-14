@@ -7,8 +7,9 @@ import (
 
 type User struct {
 	gorm.Model
-	UserName string `gorm:"type:varchar(20);not null"`
-	Password string `gorm:"type:varchar(255);not null"`
+	StudentID string `gorm:"type:varchar(20);not null"`
+	UserName  string `gorm:"type:varchar(20);not null"`
+	Password  string `gorm:"type:varchar(255);not null"`
 }
 
 func (m *User) Encrypt() error {

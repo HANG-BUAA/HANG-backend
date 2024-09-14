@@ -38,14 +38,16 @@ func (m *UserDao) GetUserByName(stUsername string) (model.User, error) {
 	return iUser, err
 }
 
-func (m *UserDao) AddUser(iUserAddDTO *dto.UserRegisterDTO) error {
+func (m *UserDao) AddUser(iUserRegisterDTO *dto.UserRegisterDTO) error {
 	var iUser model.User
-	iUserAddDTO.ConvertToModel(&iUser)
+	iUserRegisterDTO.ConvertToModel(&iUser)
 
 	err := m.Orm.Save(&iUser).Error
 	if err == nil {
-		iUserAddDTO.ID = iUser.ID
-		iUserAddDTO.Password = ""
+		iUserRegisterDTO.ID = iUser.ID
+		// 将验证码和密码清除，不返回
+		iUserRegisterDTO.Password = ""
+		iUserRegisterDTO.VerificationCode = ""
 	}
 	return err
 }

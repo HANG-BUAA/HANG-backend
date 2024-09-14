@@ -7,6 +7,125 @@
         "version": "0.0.1"
     },
     "paths": {
+        "/api/v1/public/login": {
+            "post": {
+                "description": "登录接口，返回用户信息与token",
+                "tags": [
+                    "公共接口"
+                ],
+                "summary": "用户登录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户名",
+                        "name": "username",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "密码",
+                        "name": "password",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "登录成功结果",
+                        "schema": {
+                            "$ref": "#/definitions/api.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "登录失败",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/register": {
+            "post": {
+                "description": "注册时需要先发送验证码，这里传入的 username 其实就是学号，创建账号成功后默认的初始 username 也即学号",
+                "tags": [
+                    "公共接口"
+                ],
+                "summary": "用户注册",
+                "parameters": [
+                    {
+                        "description": "用户名（学号）",
+                        "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "密码",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "发送的验证码（有效期内）",
+                        "name": "code",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "注册成功结果",
+                        "schema": {
+                            "$ref": "#/definitions/api.RegisterResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "注册失败",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/public/send-email": {
+            "post": {
+                "description": "验证码存在 redis 里，默认配置5min，对学号拼接 @buaa.edu.cn 发送",
+                "tags": [
+                    "公共接口"
+                ],
+                "summary": "发送验证码",
+                "parameters": [
+                    {
+                        "description": "学号",
+                        "name": "student_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "500": {
+                        "description": "服务器端验证码发送失败，可能是邮箱不对或服务问题",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
         "/ping": {
             "post": {
                 "description": "ping通此接口，说明项目运行成功",
@@ -15,6 +134,55 @@
                     "200": {
                         "description": "连接成功",
                         "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "CreatedAt": {
+                            "type": "string"
+                        },
+                        "DeletedAt": {
+                            "type": "string"
+                        },
+                        "ID": {
+                            "type": "integer"
+                        },
+                        "UpdatedAt": {
+                            "type": "string"
+                        },
+                        "student_id": {
+                            "type": "string"
+                        },
+                        "token": {
+                            "type": "string"
+                        },
+                        "username": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "api.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "ID": {
+                            "type": "integer"
+                        },
+                        "username": {
                             "type": "string"
                         }
                     }
