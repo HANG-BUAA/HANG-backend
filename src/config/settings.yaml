@@ -14,6 +14,10 @@ db:
     maxIdleConn: 10 # 最多空闲链接数
     maxOpenConn: 10 # 最多打开连接数
 
+  redis:
+    host: localhost
+    port: 6379
+
 jwt:
   tokenExpire: 30 # token有效时长（分钟）
   signingKey: hang.com # 签名使用的 key
@@ -23,3 +27,10 @@ log:
   MaxBackups: 10 # 保留旧文件的最大个数
   MaxAge: 90 # 保留旧文件的最大天数
   Compress: false # 是否开启压缩
+
+smtp:
+  user_addr: 18646154381@163.com
+  smtp_addr: smtp.163.com:25
+  smtp_host: smtp.163.com
+  smtp_password: yourpassword
+  expiration: 5  # 过期时间（分钟）

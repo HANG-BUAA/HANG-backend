@@ -6,6 +6,7 @@ import (
 	"HANG-backend/src/router"
 	"HANG-backend/src/utils"
 	"fmt"
+	"time"
 )
 
 func Start() {
@@ -22,6 +23,16 @@ func Start() {
 	if err != nil {
 		initErr = utils.AppendError(initErr, err)
 	}
+
+	// 初始化 Redis 连接
+	rdClient, err := config.InitRedis()
+	global.RedisClient = rdClient
+	if err != nil {
+		initErr = utils.AppendError(initErr, err)
+	}
+
+	_ = global.RedisClient.Set("fxk", "hhh", time.Second*100)
+	fmt.Println(global.RedisClient.Get("fxk"))
 
 	if initErr != nil {
 		if global.Logger != nil {
