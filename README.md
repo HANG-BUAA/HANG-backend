@@ -42,9 +42,9 @@ docker run --name redis-server \  # 容器名
 
 根据自己使用的邮箱不同，到各自官网上进行配置，记住生成的秘钥，要在下面的配置文件里进行配置。
 
-### 5. 修改配置文件
+### 5. 配置文件
 
-打开`./src/config/settings.yml`文件，并修改为自己的配置，样例如下：
+创建`./src/config/settings.yml`文件，并修改为自己的配置，样例如下：
 
 ~~~yaml
 mode:
