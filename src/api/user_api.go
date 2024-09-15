@@ -5,7 +5,6 @@ import (
 	"HANG-backend/src/service/dto"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"time"
 )
 
 const (
@@ -35,13 +34,13 @@ func NewUserApi() UserApi {
 // @Failure 400 {object} object "登录失败"
 // @Router /api/v1/public/login [post]
 func (m UserApi) Login(c *gin.Context) {
-	var iUserLoginDTO dto.UserLoginDTO
+	var iUserLoginRequestDTO dto.UserLoginRequestDTO
 
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserLoginDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserLoginRequestDTO}).GetError(); err != nil {
 		return
 	}
 
-	err := m.Service.Login(&iUserLoginDTO)
+	iUserLoginResponseDTO, err := m.Service.Login(&iUserLoginRequestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Status: http.StatusUnauthorized,
@@ -52,7 +51,7 @@ func (m UserApi) Login(c *gin.Context) {
 	}
 
 	m.OK(ResponseJson{
-		Data: iUserLoginDTO,
+		Data: *iUserLoginResponseDTO,
 	})
 }
 
@@ -70,13 +69,13 @@ func (m UserApi) Login(c *gin.Context) {
 // @Failure 500 {object} object "服务器端验证码发送失败，可能是邮箱不对或服务问题"
 // @Router /api/v1/public/send-email [post]
 func (m UserApi) SendEmail(c *gin.Context) {
-	var iUserSendEmailDTO dto.UserSendEmailDTO
+	var iUserSendEmailRequestDTO dto.UserSendEmailRequestDTO
 
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserSendEmailDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserSendEmailRequestDTO}).GetError(); err != nil {
 		return
 	}
 
-	err := m.Service.SendEmail(iUserSendEmailDTO)
+	err := m.Service.SendEmail(&iUserSendEmailRequestDTO)
 	if err != nil {
 		m.ServerFail(ResponseJson{
 			Code: ERR_CODE_SEND_EMAIL,
@@ -102,12 +101,12 @@ func (m UserApi) SendEmail(c *gin.Context) {
 // @Failure 400 {object} object "注册失败"
 // @Router /api/v1/public/register [post]
 func (m UserApi) Register(c *gin.Context) {
-	var iUserRegisterDTO dto.UserRegisterDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserRegisterDTO}).GetError(); err != nil {
+	var iUserRegisterRequestDTO dto.UserRegisterRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iUserRegisterRequestDTO}).GetError(); err != nil {
 		return
 	}
 
-	err := m.Service.Register(&iUserRegisterDTO)
+	iUserRegisterResponseDTO, err := m.Service.Register(&iUserRegisterRequestDTO)
 
 	if err != nil {
 		m.Fail(ResponseJson{
@@ -118,25 +117,6 @@ func (m UserApi) Register(c *gin.Context) {
 	}
 
 	m.OK(ResponseJson{
-		Data: iUserRegisterDTO,
+		Data: *iUserRegisterResponseDTO,
 	})
-}
-
-type LoginResponse struct {
-	Data struct {
-		ID        int        `json:"ID"`
-		CreatedAt time.Time  `json:"CreatedAt"`
-		UpdatedAt time.Time  `json:"UpdatedAt"`
-		DeletedAt *time.Time `json:"DeletedAt"`
-		Username  string     `json:"username"`
-		StudentID string     `json:"student_id"`
-		Token     string     `json:"token"`
-	} `json:"data"`
-}
-
-type RegisterResponse struct {
-	Data struct {
-		ID       int    `json:"ID"`
-		Username string `json:"username"`
-	} `json:"data"`
 }

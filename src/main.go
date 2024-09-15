@@ -2,8 +2,6 @@ package main
 
 import (
 	"HANG-backend/src/cmd"
-	"HANG-backend/src/utils"
-	"fmt"
 )
 
 // @title 小航书后端
@@ -12,6 +10,4 @@ import (
 func main() {
 	defer cmd.Clean()
 	cmd.Start()
-	token, _ := utils.GenerateToken(1, "zs")
-	fmt.Println(utils.IsTokenValid(token))
 }

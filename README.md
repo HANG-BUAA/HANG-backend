@@ -28,8 +28,8 @@ docker run --name mysql-container \  # 容器名
 
 ~~~bash
 docker run --name redis-server \  # 容器名
-	-p 6379:6379 \  # 暴露端口，建议直接映射6397
-    -d redis
+  -p 6379:6379 \  # 暴露端口，建议直接映射6397
+  -d redis
 ~~~
 
 ### 3. 本地配置go环境
@@ -105,6 +105,6 @@ go run .
 
 1. http检验：浏览器访问`http:localhost:8000/ping`，若返回`pong`，则说明服务启动成功；
 2. swag检验：浏览器访问`http:lcoalhost:8000/swagger/index.html`，出现swagger接口文档说明配置成功；
-3. redis检验：按照swagger或apifox里的接口文档给自己的北航邮箱发送验证码，发送成功且后端不报错说明链接成功
-4. 数据库检验：运行swagger或apifox里的注册与登录接口，状态码200则说明数据库连接成功，也可连接到数据库进行查看检验。
+3. redis检验：按照swagger或apifox里的接口文档给自己的北航邮箱发送验证码，发送成功且后端不报错说明链接成功；（目前我已经准备弃用swagger了，请使用apifox）
+4. 数据库检验：运行swagger或apifox里的注册与登录接口，状态码200则说明数据库连接成功，也可连接到数据库进行查看检验。（同上）
 
