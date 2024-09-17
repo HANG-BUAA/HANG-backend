@@ -51,3 +51,12 @@ type UserRegisterResponseDTO struct {
 type UserSendEmailRequestDTO struct {
 	StudentID string `json:"student_id" form:"student_id" binding:"required" required_err:"student_id is Required"`
 }
+
+type UserUpdateAvatarRequestDTO struct {
+	ID  uint
+	Url string
+}
+
+type UserUpdateAvatarResponseDTO struct {
+	Url string `json:"url"`
+}

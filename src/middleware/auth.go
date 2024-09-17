@@ -43,6 +43,8 @@ func Auth() func(c *gin.Context) {
 
 		// todo 判断 token 是否过期与续期
 
+		// 把 id 存到 context 中
+		c.Set("id", iJwtCustomClaims.ID)
 		c.Next()
 	}
 }

@@ -14,11 +14,9 @@ func InitUserRoutes() {
 			rgPublic.POST("/register", userApi.Register)
 		}
 
-		rgAuthUser := rgAuth.Group("/user")
+		rgAuthUser := rgAuth.Group("/users")
 		{
-			rgAuthUser.GET("", func(context *gin.Context) {
-
-			})
+			rgAuthUser.PUT("/update-avatar", userApi.UploadAvatar)
 		}
 	})
 }

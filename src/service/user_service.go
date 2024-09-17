@@ -28,26 +28,6 @@ func NewUserService() *UserService {
 }
 
 func (m *UserService) Login(iUserLoginRequestDTO *dto.UserLoginRequestDTO) (res *dto.UserLoginResponseDTO, err error) {
-	//var errResult error
-	//var token string
-	//
-	//iUser, err := m.Dao.GetUserByName(iUserLoginRequestDTO.Username)
-	//
-	//// 用户名或密码不正确
-	//if err != nil || !utils.CompareHashAndPassword(iUser.Password, iUserLoginRequestDTO.Password) {
-	//	errResult = errors.New("invalid UserName Or Password")
-	//} else {
-	//	// 登录成功，生成 token
-	//	token, err = utils.GenerateToken(iUser.ID, iUser.UserName)
-	//	if err != nil {
-	//		errResult = errors.New("generate Token Error")
-	//	}
-	//	iUserLoginRequestDTO.Token = token
-	//	iUserLoginRequestDTO.StudentID = iUser.StudentID
-	//	iUserLoginRequestDTO.Password = ""
-	//	iUserLoginRequestDTO.ID = iUser.ID
-	//}
-	//return errResult
 	var token string     // 生成的 token
 	var iUser model.User // 查找的用户对象
 
@@ -87,21 +67,6 @@ func (m *UserService) Login(iUserLoginRequestDTO *dto.UserLoginRequestDTO) (res 
 }
 
 func (m *UserService) Register(iUserRegisterRequestDTO *dto.UserRegisterRequestDTO) (res *dto.UserRegisterResponseDTO, err error) {
-	//if m.Dao.CheckUserExit(iUserRegisterRequestDTO.Username) {
-	//	return errors.New("username Exists")
-	//}
-	//
-	//// 检查验证码是否正确
-	//studentID := iUserRegisterRequestDTO.Username
-	//containedCode, err := global.RedisClient.Get(studentID + "_verification")
-	//if err != nil {
-	//	return err
-	//}
-	//if containedCode != iUserRegisterRequestDTO.VerificationCode {
-	//	return errors.New("verification Code Error")
-	//}
-	//
-	//return m.Dao.AddUser(iUserRegisterRequestDTO)
 	// 检查学号是否已经存在（被注册过）
 	if m.Dao.CheckStudentIDExist(iUserRegisterRequestDTO.StudentID) {
 		err = errors.New("the student_id is Already registered")
@@ -110,7 +75,7 @@ func (m *UserService) Register(iUserRegisterRequestDTO *dto.UserRegisterRequestD
 
 	// 检查验证码是否正确
 	studentID := iUserRegisterRequestDTO.StudentID
-	containedCode, tmpErr := global.RedisClient.Get(studentID + "_verification")
+	containedCode, tmpErr := utils.GetRedis(studentID + "_verification")
 	if tmpErr != nil {
 		err = errors.New("verification code expired")
 		return
@@ -140,5 +105,18 @@ func (m *UserService) SendEmail(iUserSendEmailRequestDTO *dto.UserSendEmailReque
 	}
 
 	// 把 code 存到 redis里
-	return global.RedisClient.Set(studentID+"_verification", code, time.Duration(viper.GetInt("smtp.expiration"))*time.Minute)
+	return utils.SetRedis(studentID+"_verification", code, time.Duration(viper.GetInt("smtp.expiration"))*time.Minute)
+}
+
+func (m *UserService) UpdateAvatar(iUserUpdateAvatarRequestDTO *dto.UserUpdateAvatarRequestDTO) (res *dto.UserUpdateAvatarResponseDTO, err error) {
+	id := iUserUpdateAvatarRequestDTO.ID
+	url := iUserUpdateAvatarRequestDTO.Url
+	err = global.DB.Model(&model.User{}).Where("id = ?", id).Update("avatar", url).Error
+	if err != nil {
+		return
+	}
+	res = &dto.UserUpdateAvatarResponseDTO{
+		Url: url,
+	}
+	return
 }

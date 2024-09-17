@@ -3,14 +3,16 @@ package api
 import (
 	"HANG-backend/src/service"
 	"HANG-backend/src/service/dto"
+	"HANG-backend/src/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 const (
-	ERR_CODE_ADD_USER   = 10011
-	ERR_CODE_LOGIN      = 10012
-	ERR_CODE_SEND_EMAIL = 10013
+	ERR_CODE_ADD_USER    = 10011
+	ERR_CODE_LOGIN       = 10012
+	ERR_CODE_SEND_EMAIL  = 10013
+	ERR_CODE_UPLOAD_FILE = 10014
 )
 
 type UserApi struct {
@@ -118,5 +120,45 @@ func (m UserApi) Register(c *gin.Context) {
 
 	m.OK(ResponseJson{
 		Data: *iUserRegisterResponseDTO,
+	})
+}
+
+func (m UserApi) UploadAvatar(c *gin.Context) {
+	// 这个接口实际上没有 json 数据要传入，只有一个文件要从表单里传输，在下面的逻辑里实现
+	// 此处还要 BuildRequest 的原因是把 c(*gin.Context) 绑定到 UserApi 上
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c}).GetError(); err != nil {
+		return
+	}
+
+	id, _ := c.Get("id") // 这里经过中间件的处理，一定有 id
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: ERR_CODE_UPLOAD_FILE,
+			Msg:  "error when fetching avatar",
+		})
+		return
+	}
+	path, err := utils.UploadFile(file, "user_avatars")
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: ERR_CODE_UPLOAD_FILE,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	iUserUpdateAvatarResponseDTO, err := m.Service.UpdateAvatar(&dto.UserUpdateAvatarRequestDTO{
+		ID:  id.(uint),
+		Url: path,
+	})
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: ERR_CODE_UPLOAD_FILE,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *iUserUpdateAvatarResponseDTO,
 	})
 }

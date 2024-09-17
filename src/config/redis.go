@@ -4,15 +4,10 @@ import (
 	"context"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
-	"time"
 )
 
-type RedisClient struct{}
-
-var rdClient *redis.Client
-
-func InitRedis() (*RedisClient, error) {
-	rdClient = redis.NewClient(&redis.Options{
+func InitRedis() (*redis.Client, error) {
+	rdClient := redis.NewClient(&redis.Options{
 		Addr:     viper.GetString("db.redis.host") + ":" + viper.GetString("db.redis.port"),
 		Password: "",
 		DB:       0,
@@ -22,17 +17,17 @@ func InitRedis() (*RedisClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RedisClient{}, nil
+	return rdClient, nil
 }
 
-func (c RedisClient) Set(key string, value any, expiration time.Duration) error {
-	return rdClient.Set(context.Background(), key, value, expiration).Err()
-}
-
-func (c RedisClient) Get(key string) (any, error) {
-	return rdClient.Get(context.Background(), key).Result()
-}
-
-func (c RedisClient) Delete(key ...string) error {
-	return rdClient.Del(context.Background(), key...).Err()
-}
+//func (c RedisClient) Set(key string, value any, expiration time.Duration) error {
+//	return rdClient.Set(context.Background(), key, value, expiration).Err()
+//}
+//
+//func (c RedisClient) Get(key string) (any, error) {
+//	return rdClient.Get(context.Background(), key).Result()
+//}
+//
+//func (c RedisClient) Delete(key ...string) error {
+//	return rdClient.Del(context.Background(), key...).Err()
+//}
