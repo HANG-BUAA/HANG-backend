@@ -33,6 +33,7 @@ type UserLoginResponseDTO struct {
 	utils.CustomBaseModel
 	Username  string `json:"username"`
 	StudentID string `json:"student_id"`
+	Role      uint   `json:"role"`
 	Token     string `json:"token"`
 }
 
@@ -46,6 +47,7 @@ type UserRegisterResponseDTO struct {
 	ID        uint   `json:"id"`
 	Username  string `json:"username"`
 	StudentID string `json:"student_id"`
+	Role      uint   `json:"role"`
 }
 
 type UserSendEmailRequestDTO struct {

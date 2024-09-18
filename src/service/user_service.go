@@ -37,7 +37,7 @@ func (m *UserService) Login(iUserLoginRequestDTO *dto.UserLoginRequestDTO) (res 
 	} else if iUserLoginRequestDTO.StudentID != "" {
 		iUser, err = m.Dao.GetUserByStudentID(iUserLoginRequestDTO.StudentID)
 	} else {
-		err = errors.New("Either 'username' or 'student_id' must be provided")
+		err = errors.New("either 'username' or 'student_id' must be provided")
 	}
 	if err != nil {
 		return
@@ -58,6 +58,7 @@ func (m *UserService) Login(iUserLoginRequestDTO *dto.UserLoginRequestDTO) (res 
 		Token:     token,
 		StudentID: iUser.StudentID,
 		Username:  iUser.UserName,
+		Role:      iUser.Role,
 	}
 	res.ID = iUser.ID
 	res.CreatedAt = iUser.CreatedAt
@@ -93,6 +94,7 @@ func (m *UserService) Register(iUserRegisterRequestDTO *dto.UserRegisterRequestD
 		ID:        iUser.ID,
 		Username:  iUser.UserName,
 		StudentID: iUser.StudentID,
+		Role:      iUser.Role,
 	}
 	return
 }

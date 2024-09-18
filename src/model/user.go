@@ -11,6 +11,7 @@ type User struct {
 	UserName  string `gorm:"type:varchar(20);not null"`
 	Password  string `gorm:"type:varchar(255);not null"`
 	Avatar    string `gorm:"type:varchar(255)"`
+	Role      uint   `gorm:"type:int(8);not null)"`
 }
 
 func (m *User) Encrypt() error {
