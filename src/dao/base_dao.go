@@ -11,6 +11,6 @@ type BaseDao struct {
 
 func NewBaseDao() BaseDao {
 	return BaseDao{
-		Orm: global.DB,
+		Orm: global.RDB,
 	}
 }

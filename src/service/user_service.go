@@ -113,7 +113,7 @@ func (m *UserService) SendEmail(iUserSendEmailRequestDTO *dto.UserSendEmailReque
 func (m *UserService) UpdateAvatar(iUserUpdateAvatarRequestDTO *dto.UserUpdateAvatarRequestDTO) (res *dto.UserUpdateAvatarResponseDTO, err error) {
 	id := iUserUpdateAvatarRequestDTO.ID
 	url := iUserUpdateAvatarRequestDTO.Url
-	err = global.DB.Model(&model.User{}).Where("id = ?", id).Update("avatar", url).Error
+	err = global.RDB.Model(&model.User{}).Where("id = ?", id).Update("avatar", url).Error
 	if err != nil {
 		return
 	}

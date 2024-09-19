@@ -18,7 +18,7 @@ func Start() {
 
 	// 初始化数据库连接
 	db, err := config.InitDB()
-	global.DB = db
+	global.RDB = db
 	if err != nil {
 		initErr = utils.AppendError(initErr, err)
 	}

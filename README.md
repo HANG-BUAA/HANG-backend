@@ -36,7 +36,7 @@ docker run --name redis-server \  # 容器名
 
 略，要求设置`go mod`模式，并设置合适的`GOPROXY`，如阿里云等
 
-可以用`go mod env`查看`go`全部环境配置
+可以用`go env`查看`go`全部环境配置
 
 ### 4. 配置自己本地的邮箱smtp服务
 
@@ -104,7 +104,7 @@ go run .
 ### 7. 检验
 
 1. http检验：浏览器访问`http:localhost:8000/ping`，若返回`pong`，则说明服务启动成功；
-2. swag检验：浏览器访问`http:lcoalhost:8000/swagger/index.html`，出现swagger接口文档说明配置成功；
+2. swag检验（已弃用）：浏览器访问`http:lcoalhost:8000/swagger/index.html`，出现swagger接口文档说明配置成功；
 3. redis检验：按照swagger或apifox里的接口文档给自己的北航邮箱发送验证码，发送成功且后端不报错说明链接成功；（目前我已经准备弃用swagger了，请使用apifox）
 4. 数据库检验：运行swagger或apifox里的注册与登录接口，状态码200则说明数据库连接成功，也可连接到数据库进行查看检验。（同上）
 

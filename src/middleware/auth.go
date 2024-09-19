@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"HANG-backend/src/api"
+	"HANG-backend/src/global"
 	"HANG-backend/src/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -9,15 +10,14 @@ import (
 )
 
 const (
-	ERR_CODE_INVALID_TOKEN = 100401
-	TOKEN_NAME             = "Authorization"
-	TOKEN_PREFIX           = "Bearer "
+	TOKEN_NAME   = "Authorization"
+	TOKEN_PREFIX = "Bearer "
 )
 
 func tokenErr(c *gin.Context) {
 	api.Fail(c, api.ResponseJson{
 		Status: http.StatusUnauthorized,
-		Code:   ERR_CODE_INVALID_TOKEN,
+		Code:   global.ERR_CODE_INVALID_TOKEN,
 		Msg:    "Invalid Token",
 	})
 }

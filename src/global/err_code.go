@@ -1,0 +1,15 @@
+package global
+
+// 用户相关错误码
+const (
+	ERR_CODE_LOGIN_FAILED = iota + 10010
+	ERR_CODE_SEND_EMAIL
+	ERR_CODE_ADD_USER
+	ERR_CODE_INVALID_TOKEN
+)
+
+// 文件操作相关错误码
+const (
+	ERR_CODE_UPLOAD_MISSING_FIELD = iota + 20011
+	ERR_CODE_UPLOAD_SERVER_FAILED
+)

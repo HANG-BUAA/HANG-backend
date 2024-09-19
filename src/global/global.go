@@ -8,6 +8,6 @@ import (
 
 var (
 	Logger      *zap.SugaredLogger
-	DB          *gorm.DB
+	RDB         *gorm.DB
 	RedisClient *redis.Client
 )
