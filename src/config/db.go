@@ -25,7 +25,7 @@ func InitDB() (*gorm.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", username, password, host, port, dbname)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
-			TablePrefix:   "sys_",
+			TablePrefix:   "",
 			SingularTable: true,
 		},
 		Logger: logger.Default.LogMode(logMode),
@@ -44,7 +44,15 @@ func InitDB() (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(viper.GetInt("db.mysql.maxOpenConn"))
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	if err = db.AutoMigrate(&model.User{}, &model.Role{}, &model.Permission{}); err != nil {
+	if err = db.AutoMigrate(
+		&model.User{},
+		&model.Role{},
+		&model.Permission{},
+		&model.Post{},
+		&model.PostLike{},
+		&model.PostCollect{},
+		&model.Comment{},
+	); err != nil {
 		return nil, err
 	}
 

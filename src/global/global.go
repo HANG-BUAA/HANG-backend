@@ -11,3 +11,7 @@ var (
 	RDB         *gorm.DB
 	RedisClient *redis.Client
 )
+
+const (
+	PageSize int = 20 // 分页大小
+)

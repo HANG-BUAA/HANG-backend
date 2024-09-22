@@ -14,9 +14,10 @@ type Role struct {
 var (
 	PermissionManageUsers  = Permission{ID: 1, Name: "manage_users"}
 	PermissionManageAdmins = Permission{ID: 2, Name: "manage_admins"}
+	PermissionViewDeleted  = Permission{ID: 3, Name: "view_deleted"}
 )
 
-var Permissions = []Permission{PermissionManageUsers, PermissionManageAdmins}
+var Permissions = []Permission{PermissionManageUsers, PermissionManageAdmins, PermissionViewDeleted}
 
 // 角色集合
 var (
@@ -33,6 +34,6 @@ var RolePermissionMap = []struct {
 	Permissions []Permission
 }{
 	{Role: RoleUser, Permissions: []Permission{}},
-	{Role: RoleAdmin, Permissions: []Permission{PermissionManageUsers}},
-	{Role: RoleSuperAdmin, Permissions: []Permission{PermissionManageUsers, PermissionManageAdmins}},
+	{Role: RoleAdmin, Permissions: []Permission{PermissionManageUsers, PermissionViewDeleted}},
+	{Role: RoleSuperAdmin, Permissions: []Permission{PermissionManageUsers, PermissionManageAdmins, PermissionViewDeleted}},
 }

@@ -37,6 +37,7 @@ func (m *BaseApi) BuildRequest(option BuildRequestOption) *BaseApi {
 
 	// 绑定请求数据
 	if option.DTO != nil {
+		// 每次只处理一种类型的绑定，如果两处都有，需要两次调用绑定
 		if option.BindParamsFromUri {
 			errResult = m.Ctx.ShouldBindUri(option.DTO)
 		} else {

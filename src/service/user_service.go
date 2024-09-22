@@ -2,7 +2,6 @@ package service
 
 import (
 	"HANG-backend/src/dao"
-	"HANG-backend/src/global"
 	"HANG-backend/src/model"
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
@@ -55,15 +54,15 @@ func (m *UserService) Login(iUserLoginRequestDTO *dto.UserLoginRequestDTO) (res 
 	}
 
 	res = &dto.UserLoginResponseDTO{
+		ID:        iUser.ID,
 		Token:     token,
 		StudentID: iUser.StudentID,
 		Username:  iUser.UserName,
 		Role:      iUser.Role,
+		CreatedAt: iUser.CreatedAt,
+		UpdatedAt: iUser.UpdatedAt,
+		DeletedAt: iUser.DeletedAt,
 	}
-	res.ID = iUser.ID
-	res.CreatedAt = iUser.CreatedAt
-	res.UpdatedAt = iUser.UpdatedAt
-	res.DeletedAt = iUser.DeletedAt
 	return
 }
 
@@ -113,10 +112,14 @@ func (m *UserService) SendEmail(iUserSendEmailRequestDTO *dto.UserSendEmailReque
 func (m *UserService) UpdateAvatar(iUserUpdateAvatarRequestDTO *dto.UserUpdateAvatarRequestDTO) (res *dto.UserUpdateAvatarResponseDTO, err error) {
 	id := iUserUpdateAvatarRequestDTO.ID
 	url := iUserUpdateAvatarRequestDTO.Url
-	err = global.RDB.Model(&model.User{}).Where("id = ?", id).Update("avatar", url).Error
+
+	err = m.Dao.UpdateUser(id, map[string]interface{}{
+		"avatar": url,
+	})
 	if err != nil {
 		return
 	}
+
 	res = &dto.UserUpdateAvatarResponseDTO{
 		Url: url,
 	}

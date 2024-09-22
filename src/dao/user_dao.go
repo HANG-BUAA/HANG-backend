@@ -31,6 +31,12 @@ func (m *UserDao) GetUserByName(iUsername string) (model.User, error) {
 	return iUser, err
 }
 
+func (m *UserDao) GetUserByID(id uint) (model.User, error) {
+	var iUser model.User
+	err := m.Orm.Where("id = ?", id).Find(&iUser).Error
+	return iUser, err
+}
+
 func (m *UserDao) CheckStudentIDExist(iStudentID string) bool {
 	var nTotal int64
 	m.Orm.Model(&model.User{}).Where("student_id = ?", iStudentID).Count(&nTotal)
@@ -48,4 +54,11 @@ func (m *UserDao) AddUser(iStudentID, iPassword string) (model.User, error) {
 		return model.User{}, err
 	}
 	return iUser, nil
+}
+
+func (m *UserDao) UpdateUser(userID uint, updatedFields map[string]interface{}) error {
+	if err := m.Orm.Model(&model.User{}).Where("id = ?", userID).Updates(updatedFields).Error; err != nil {
+		return err
+	}
+	return nil
 }
