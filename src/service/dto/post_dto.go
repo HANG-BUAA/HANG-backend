@@ -50,7 +50,7 @@ type PostCollectRequestDTO struct {
 
 type PostListTRequestDTO struct {
 	UserID uint
-	Page   int `form:"page" binding:"required,min=1" required_err:"page is Required" min_err:"page could not be lower than 1"`
+	Page   int `json:"page" form:"page" binding:"required,min=1" required_err:"page is Required" min_err:"page could not be lower than 1"`
 }
 
 type PostListTResponseDTO struct {

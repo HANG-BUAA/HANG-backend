@@ -2,15 +2,15 @@ package utils
 
 import "golang.org/x/crypto/bcrypt"
 
-func Encrypt(stText string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(stText), bcrypt.DefaultCost)
+func Encrypt(text string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(text), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
 	return string(hash), nil
 }
 
-func CompareHashAndPassword(hash, pasword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pasword))
+func CompareHashAndPassword(hash, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }

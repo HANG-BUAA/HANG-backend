@@ -17,15 +17,11 @@ type Post struct {
 }
 
 type PostLike struct {
-	User   User
 	UserID uint `gorm:"primaryKey;index"`
-	Post   Post
 	PostID uint `gorm:"primaryKey;index"`
 }
 
 type PostCollect struct {
-	User   User
 	UserID uint `gorm:"primaryKey;index"`
-	Post   Post
 	PostID uint `gorm:"primaryKey;index"`
 }

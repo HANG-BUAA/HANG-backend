@@ -19,15 +19,3 @@ func InitRedis() (*redis.Client, error) {
 	}
 	return rdClient, nil
 }
-
-//func (c RedisClient) Set(key string, value any, expiration time.Duration) error {
-//	return rdClient.Set(context.Background(), key, value, expiration).Err()
-//}
-//
-//func (c RedisClient) Get(key string) (any, error) {
-//	return rdClient.Get(context.Background(), key).Result()
-//}
-//
-//func (c RedisClient) Delete(key ...string) error {
-//	return rdClient.Del(context.Background(), key...).Err()
-//}

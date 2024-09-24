@@ -62,18 +62,18 @@ func InitRouter() {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// 启动服务
-	stPort := viper.GetString("server.port")
-	if stPort == "" {
-		stPort = "8000"
+	port := viper.GetString("server.port")
+	if port == "" {
+		port = "8000"
 	}
 
 	server := &http.Server{
-		Addr:    ":" + stPort,
+		Addr:    ":" + port,
 		Handler: r,
 	}
 
 	go func() {
-		global.Logger.Infof("Start Listen: %s", stPort)
+		global.Logger.Infof("Start Listen: %s", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			global.Logger.Error("Start Server Error: %s", err.Error())
 			return

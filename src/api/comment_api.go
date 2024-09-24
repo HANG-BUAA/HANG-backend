@@ -21,14 +21,14 @@ func NewCommentApi() CommentApi {
 
 // Create 创建评论
 func (m CommentApi) Create(c *gin.Context) {
-	iUserID, _ := c.Get("id")
-	var iCommentCreateRequestDTO dto.CommentCreateRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iCommentCreateRequestDTO}).GetError(); err != nil {
+	userID, _ := c.Get("id")
+	var commentCreateRequestDTO dto.CommentCreateRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentCreateRequestDTO}).GetError(); err != nil {
 		return
 	}
-	iCommentCreateRequestDTO.UserID = iUserID.(uint)
+	commentCreateRequestDTO.UserID = userID.(uint)
 
-	iCommentCreateResponseDTO, err := m.Service.CreateComment(&iCommentCreateRequestDTO)
+	commentCreateResponseDTO, err := m.Service.CreateComment(&commentCreateRequestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_COMMENT_FAILED,
@@ -37,6 +37,52 @@ func (m CommentApi) Create(c *gin.Context) {
 		return
 	}
 	m.OK(ResponseJson{
-		Data: *iCommentCreateResponseDTO,
+		Data: *commentCreateResponseDTO,
+	})
+}
+
+// Like 喜欢评论
+func (m CommentApi) Like(c *gin.Context) {
+	userID, _ := c.Get("id")
+	var commentLikeRequestDTO dto.CommentLikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+		return
+	}
+	commentLikeRequestDTO.UserID = userID.(uint)
+
+	err := m.Service.Like(&commentLikeRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_COMMENT_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "like success",
+		},
+	})
+}
+
+// List 查询评论列表
+func (m CommentApi) List(c *gin.Context) {
+	userID, _ := c.Get("id")
+	var commentListRequestDTO dto.CommentListRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentListRequestDTO}).GetError(); err != nil {
+		return
+	}
+	commentListRequestDTO.UserID = userID.(uint)
+
+	commentListResponseDTO, err := m.Service.List(&commentListRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_COMMENT_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *commentListResponseDTO,
 	})
 }

@@ -21,14 +21,14 @@ func NewPostApi() PostApi {
 
 // Create 创建帖子
 func (m PostApi) Create(c *gin.Context) {
-	iUserID, _ := c.Get("id")
-	var iPostCreateRequestDTO dto.PostCreateRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iPostCreateRequestDTO}).GetError(); err != nil {
+	userID, _ := c.Get("id")
+	var postCreateRequestDTO dto.PostCreateRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postCreateRequestDTO}).GetError(); err != nil {
 		return
 	}
-	iPostCreateRequestDTO.UserID = iUserID.(uint)
+	postCreateRequestDTO.UserID = userID.(uint)
 
-	iPostCreateResponseDTO, err := m.Service.CreatePost(&iPostCreateRequestDTO)
+	postCreateResponseDTO, err := m.Service.CreatePost(&postCreateRequestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_POST_FAILED,
@@ -37,20 +37,20 @@ func (m PostApi) Create(c *gin.Context) {
 		return
 	}
 	m.OK(ResponseJson{
-		Data: *iPostCreateResponseDTO,
+		Data: *postCreateResponseDTO,
 	})
 }
 
 // Like 喜欢帖子
 func (m PostApi) Like(c *gin.Context) {
-	iUserID, _ := c.Get("id")
-	var iPostLikeRequestDTO dto.PostLikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iPostLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+	userID, _ := c.Get("id")
+	var postLikeRequestDTO dto.PostLikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
-	iPostLikeRequestDTO.UserID = iUserID.(uint)
+	postLikeRequestDTO.UserID = userID.(uint)
 
-	err := m.Service.Like(&iPostLikeRequestDTO)
+	err := m.Service.Like(&postLikeRequestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_POST_FAILED,
@@ -67,14 +67,14 @@ func (m PostApi) Like(c *gin.Context) {
 
 // Collect 收藏帖子
 func (m PostApi) Collect(c *gin.Context) {
-	iUserID, _ := c.Get("id")
-	var iPostCollectRequestDTO dto.PostCollectRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iPostCollectRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+	userID, _ := c.Get("id")
+	var postCollectRequestDTO dto.PostCollectRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postCollectRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
-	iPostCollectRequestDTO.UserID = iUserID.(uint)
+	postCollectRequestDTO.UserID = userID.(uint)
 
-	err := m.Service.Collect(&iPostCollectRequestDTO)
+	err := m.Service.Collect(&postCollectRequestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_POST_FAILED,
@@ -91,14 +91,14 @@ func (m PostApi) Collect(c *gin.Context) {
 
 // List 查询帖子列表
 func (m PostApi) List(c *gin.Context) {
-	iUserID, _ := c.Get("id")
-	var iPostListRequestDTO dto.PostListTRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &iPostListRequestDTO}).GetError(); err != nil {
+	userID, _ := c.Get("id")
+	var postListRequestDTO dto.PostListTRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postListRequestDTO}).GetError(); err != nil {
 		return
 	}
-	iPostListRequestDTO.UserID = iUserID.(uint)
+	postListRequestDTO.UserID = userID.(uint)
 
-	iPostListResponseDTO, err := m.Service.List(&iPostListRequestDTO)
+	postListResponseDTO, err := m.Service.List(&postListRequestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_POST_FAILED,
@@ -107,6 +107,6 @@ func (m PostApi) List(c *gin.Context) {
 		return
 	}
 	m.OK(ResponseJson{
-		Data: iPostListResponseDTO,
+		Data: *postListResponseDTO,
 	})
 }

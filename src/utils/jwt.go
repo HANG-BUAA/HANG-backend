@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var stSigningKey = []byte(viper.GetString("jwt.signingKey"))
+var signingKey = []byte(viper.GetString("jwt.signingKey"))
 
 type JwtCustomClaims struct {
 	ID   uint
@@ -16,7 +16,7 @@ type JwtCustomClaims struct {
 }
 
 func GenerateToken(id uint, name string) (string, error) {
-	iJwtCustomClaims := JwtCustomClaims{
+	jwtCustomClaims := JwtCustomClaims{
 		ID:   id,
 		Name: name,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -25,19 +25,19 @@ func GenerateToken(id uint, name string) (string, error) {
 			Subject:   "Token",
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, iJwtCustomClaims)
-	return token.SignedString(stSigningKey)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtCustomClaims)
+	return token.SignedString(signingKey)
 }
 
 func ParseToken(tokenStr string) (JwtCustomClaims, error) {
-	iJwtCustomClaims := JwtCustomClaims{}
-	token, err := jwt.ParseWithClaims(tokenStr, &iJwtCustomClaims, func(token *jwt.Token) (interface{}, error) {
-		return stSigningKey, nil
+	jwtCustomClaims := JwtCustomClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, &jwtCustomClaims, func(token *jwt.Token) (interface{}, error) {
+		return signingKey, nil
 	})
 	if err == nil && !token.Valid {
 		err = errors.New("token is invalid")
 	}
-	return iJwtCustomClaims, err
+	return jwtCustomClaims, err
 }
 
 func IsTokenValid(tokenStr string) bool {

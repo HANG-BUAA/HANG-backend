@@ -26,15 +26,15 @@ func NewUserService() *UserService {
 	return userService
 }
 
-func (m *UserService) Login(iUserLoginRequestDTO *dto.UserLoginRequestDTO) (res *dto.UserLoginResponseDTO, err error) {
-	var token string     // 生成的 token
-	var iUser model.User // 查找的用户对象
+func (m *UserService) Login(userLoginRequestDTO *dto.UserLoginRequestDTO) (res *dto.UserLoginResponseDTO, err error) {
+	var token string    // 生成的 token
+	var user model.User // 查找的用户对象
 
 	// 检查用户是否存在
-	if iUserLoginRequestDTO.Username != "" {
-		iUser, err = m.Dao.GetUserByName(iUserLoginRequestDTO.Username)
-	} else if iUserLoginRequestDTO.StudentID != "" {
-		iUser, err = m.Dao.GetUserByStudentID(iUserLoginRequestDTO.StudentID)
+	if userLoginRequestDTO.Username != "" {
+		user, err = m.Dao.GetUserByName(userLoginRequestDTO.Username)
+	} else if userLoginRequestDTO.StudentID != "" {
+		user, err = m.Dao.GetUserByStudentID(userLoginRequestDTO.StudentID)
 	} else {
 		err = errors.New("either 'username' or 'student_id' must be provided")
 	}
@@ -43,63 +43,63 @@ func (m *UserService) Login(iUserLoginRequestDTO *dto.UserLoginRequestDTO) (res 
 	}
 
 	// 检查密码匹配性
-	if !utils.CompareHashAndPassword(iUser.Password, iUserLoginRequestDTO.Password) {
+	if !utils.CompareHashAndPassword(user.Password, userLoginRequestDTO.Password) {
 		err = errors.New("invalid password")
 		return
 	}
 
-	token, err = utils.GenerateToken(iUser.ID, iUser.UserName)
+	token, err = utils.GenerateToken(user.ID, user.UserName)
 	if err != nil {
 		err = errors.New("failed to generate token")
 	}
 
 	res = &dto.UserLoginResponseDTO{
-		ID:        iUser.ID,
+		ID:        user.ID,
 		Token:     token,
-		StudentID: iUser.StudentID,
-		Username:  iUser.UserName,
-		Role:      iUser.Role,
-		CreatedAt: iUser.CreatedAt,
-		UpdatedAt: iUser.UpdatedAt,
-		DeletedAt: iUser.DeletedAt,
+		StudentID: user.StudentID,
+		Username:  user.UserName,
+		Role:      user.Role,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		DeletedAt: user.DeletedAt,
 	}
 	return
 }
 
-func (m *UserService) Register(iUserRegisterRequestDTO *dto.UserRegisterRequestDTO) (res *dto.UserRegisterResponseDTO, err error) {
+func (m *UserService) Register(userRegisterRequestDTO *dto.UserRegisterRequestDTO) (res *dto.UserRegisterResponseDTO, err error) {
 	// 检查学号是否已经存在（被注册过）
-	if m.Dao.CheckStudentIDExist(iUserRegisterRequestDTO.StudentID) {
+	if m.Dao.CheckStudentIDExist(userRegisterRequestDTO.StudentID) {
 		err = errors.New("the student_id is Already registered")
 		return
 	}
 
 	// 检查验证码是否正确
-	studentID := iUserRegisterRequestDTO.StudentID
+	studentID := userRegisterRequestDTO.StudentID
 	containedCode, tmpErr := utils.GetRedis(studentID + "_verification")
 	if tmpErr != nil {
 		err = errors.New("verification code expired")
 		return
 	}
-	if containedCode != iUserRegisterRequestDTO.VerificationCode {
+	if containedCode != userRegisterRequestDTO.VerificationCode {
 		err = errors.New("verification code expired")
 		return
 	}
-	iUser, err := m.Dao.AddUser(studentID, iUserRegisterRequestDTO.Password)
+	user, err := m.Dao.AddUser(studentID, userRegisterRequestDTO.Password)
 	if err != nil {
 		return
 	}
 
 	res = &dto.UserRegisterResponseDTO{
-		ID:        iUser.ID,
-		Username:  iUser.UserName,
-		StudentID: iUser.StudentID,
-		Role:      iUser.Role,
+		ID:        user.ID,
+		Username:  user.UserName,
+		StudentID: user.StudentID,
+		Role:      user.Role,
 	}
 	return
 }
 
-func (m *UserService) SendEmail(iUserSendEmailRequestDTO *dto.UserSendEmailRequestDTO) error {
-	studentID := iUserSendEmailRequestDTO.StudentID
+func (m *UserService) SendEmail(userSendEmailRequestDTO *dto.UserSendEmailRequestDTO) error {
+	studentID := userSendEmailRequestDTO.StudentID
 	code, err := utils.SendEmail(studentID)
 	if err != nil {
 		return err
@@ -109,9 +109,9 @@ func (m *UserService) SendEmail(iUserSendEmailRequestDTO *dto.UserSendEmailReque
 	return utils.SetRedis(studentID+"_verification", code, time.Duration(viper.GetInt("smtp.expiration"))*time.Minute)
 }
 
-func (m *UserService) UpdateAvatar(iUserUpdateAvatarRequestDTO *dto.UserUpdateAvatarRequestDTO) (res *dto.UserUpdateAvatarResponseDTO, err error) {
-	id := iUserUpdateAvatarRequestDTO.ID
-	url := iUserUpdateAvatarRequestDTO.Url
+func (m *UserService) UpdateAvatar(userUpdateAvatarRequestDTO *dto.UserUpdateAvatarRequestDTO) (res *dto.UserUpdateAvatarResponseDTO, err error) {
+	id := userUpdateAvatarRequestDTO.ID
+	url := userUpdateAvatarRequestDTO.Url
 
 	err = m.Dao.UpdateUser(id, map[string]interface{}{
 		"avatar": url,

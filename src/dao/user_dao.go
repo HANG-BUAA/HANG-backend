@@ -19,41 +19,41 @@ func NewUserDao() *UserDao {
 	return userDao
 }
 
-func (m *UserDao) GetUserByStudentID(iStudentID string) (model.User, error) {
-	var iUser model.User
-	err := m.Orm.Model(&iUser).Where("student_id = ?", iStudentID).Find(&iUser).Error
-	return iUser, err
+func (m *UserDao) GetUserByStudentID(studentID string) (model.User, error) {
+	var user model.User
+	err := m.Orm.Model(&user).Where("student_id = ?", studentID).Find(&user).Error
+	return user, err
 }
 
-func (m *UserDao) GetUserByName(iUsername string) (model.User, error) {
-	var iUser model.User
-	err := m.Orm.Where("user_name = ?", iUsername).Find(&iUser).Error
-	return iUser, err
+func (m *UserDao) GetUserByName(username string) (model.User, error) {
+	var user model.User
+	err := m.Orm.Where("user_name = ?", username).Find(&user).Error
+	return user, err
 }
 
 func (m *UserDao) GetUserByID(id uint) (model.User, error) {
-	var iUser model.User
-	err := m.Orm.Where("id = ?", id).Find(&iUser).Error
-	return iUser, err
+	var user model.User
+	err := m.Orm.Where("id = ?", id).Find(&user).Error
+	return user, err
 }
 
-func (m *UserDao) CheckStudentIDExist(iStudentID string) bool {
-	var nTotal int64
-	m.Orm.Model(&model.User{}).Where("student_id = ?", iStudentID).Count(&nTotal)
-	return nTotal > 0
+func (m *UserDao) CheckStudentIDExist(studentID string) bool {
+	var total int64
+	m.Orm.Model(&model.User{}).Where("student_id = ?", studentID).Count(&total)
+	return total > 0
 }
 
-func (m *UserDao) AddUser(iStudentID, iPassword string) (model.User, error) {
-	iUser := model.User{
-		StudentID: iStudentID,
-		UserName:  iStudentID,
-		Password:  iPassword,
+func (m *UserDao) AddUser(studentID, password string) (model.User, error) {
+	user := model.User{
+		StudentID: studentID,
+		UserName:  studentID,
+		Password:  password,
 		Role:      1,
 	}
-	if err := m.Orm.Create(&iUser).Error; err != nil {
+	if err := m.Orm.Create(&user).Error; err != nil {
 		return model.User{}, err
 	}
-	return iUser, nil
+	return user, nil
 }
 
 func (m *UserDao) UpdateUser(userID uint, updatedFields map[string]interface{}) error {

@@ -34,9 +34,9 @@ func Auth() func(c *gin.Context) {
 
 		// token 无法解析，直接返回
 		token = token[len(TOKEN_PREFIX):]
-		iJwtCustomClaims, err := utils.ParseToken(token)
-		nUserId := iJwtCustomClaims.ID
-		if err != nil || nUserId == 0 {
+		jwtCustomClaims, err := utils.ParseToken(token)
+		userId := jwtCustomClaims.ID
+		if err != nil || userId == 0 {
 			tokenErr(c)
 			return
 		}
@@ -44,7 +44,7 @@ func Auth() func(c *gin.Context) {
 		// todo 判断 token 是否过期与续期
 
 		// 把 id 存到 context 中
-		c.Set("id", iJwtCustomClaims.ID)
+		c.Set("id", jwtCustomClaims.ID)
 		c.Next()
 	}
 }

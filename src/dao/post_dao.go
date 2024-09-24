@@ -24,34 +24,34 @@ func NewPostDao() *PostDao {
 }
 
 // CreatePost 创建帖子
-func (m *PostDao) CreatePost(iUserID uint, iTitle string, iContent string, iIsAnonymous bool) (*model.Post, error) {
+func (m *PostDao) CreatePost(userID uint, title string, content string, isAnonymous bool) (*model.Post, error) {
 	// 检查用户是否存在
-	var iUser model.User
-	err := m.Orm.Where("id = ?", iUserID).First(&iUser).Error
+	var user model.User
+	err := m.Orm.Where("id = ?", userID).First(&user).Error
 	if err != nil {
 		return &model.Post{}, err
 	}
 
 	// todo 检查用户是否被禁言
 
-	iPost := model.Post{
-		UserID:      iUserID,
-		Title:       iTitle,
-		Content:     iContent,
-		IsAnonymous: iIsAnonymous,
+	post := model.Post{
+		UserID:      userID,
+		Title:       title,
+		Content:     content,
+		IsAnonymous: isAnonymous,
 	}
-	if err := m.Orm.Create(&iPost).Error; err != nil {
+	if err := m.Orm.Create(&post).Error; err != nil {
 		return &model.Post{}, err
 	}
-	return &iPost, nil
+	return &post, nil
 }
 
 // LikePost 用户喜欢某个帖子
-func (m *PostDao) LikePost(iUserID uint, iPostID uint) error {
-	var iPostLike model.PostLike
+func (m *PostDao) LikePost(userID uint, postID uint) error {
+	var postLike model.PostLike
 
 	// 查询用户是否已经喜欢了该帖子
-	err := m.Orm.Where("user_id = ? AND post_id = ?", iUserID, iPostID).First(&iPostLike).Error
+	err := m.Orm.Where("user_id = ? AND post_id = ?", userID, postID).First(&postLike).Error
 	if err == nil {
 		// 用户已经喜欢了该帖子
 		return errors.New("liked post")
@@ -59,8 +59,8 @@ func (m *PostDao) LikePost(iUserID uint, iPostID uint) error {
 		return err
 	}
 	newPostLike := model.PostLike{
-		UserID: iUserID,
-		PostID: iPostID,
+		UserID: userID,
+		PostID: postID,
 	}
 	if err := m.Orm.Create(&newPostLike).Error; err != nil {
 		return err
@@ -68,19 +68,19 @@ func (m *PostDao) LikePost(iUserID uint, iPostID uint) error {
 	return nil
 }
 
-func (m *PostDao) CollectPost(iUserID uint, iPostID uint) error {
-	var iPostCollect model.PostCollect
+func (m *PostDao) CollectPost(userID uint, postID uint) error {
+	var postCollect model.PostCollect
 
 	// 查询用户是否已经收藏了该帖子
-	err := m.Orm.Where("user_id = ? AND post_id = ?", iUserID, iPostID).First(&iPostCollect).Error
+	err := m.Orm.Where("user_id = ? AND post_id = ?", userID, postID).First(&postCollect).Error
 	if err == nil {
 		return errors.New("collected post")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 	newPostCollect := model.PostCollect{
-		UserID: iUserID,
-		PostID: iPostID,
+		UserID: userID,
+		PostID: postID,
 	}
 	if err := m.Orm.Create(&newPostCollect).Error; err != nil {
 		return err
@@ -98,6 +98,8 @@ func (m *PostDao) ListPostOverviews(page int, userID uint) (posts []dto.PostOver
 	if err != nil {
 		return
 	}
+
+	// todo 超出分页数量检测
 
 	// 子查询：获取点赞数、收藏数、评论数
 	subQueryLike := m.Orm.Model(&model.PostLike{}).Select("post_id, COUNT(*) as like_num").Group("post_id")

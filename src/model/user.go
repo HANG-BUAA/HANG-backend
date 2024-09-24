@@ -15,9 +15,9 @@ type User struct {
 }
 
 func (m *User) Encrypt() error {
-	stHash, err := utils.Encrypt(m.Password)
+	hash, err := utils.Encrypt(m.Password)
 	if err == nil {
-		m.Password = stHash
+		m.Password = hash
 	}
 	return err
 }

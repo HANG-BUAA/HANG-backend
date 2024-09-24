@@ -23,74 +23,72 @@ func NewPostService() *PostService {
 }
 
 // CreatePost 创建帖子
-func (m *PostService) CreatePost(iPostCreateDTO *dto.PostCreateRequestDTO) (res *dto.PostCreateResponseDTO, err error) {
-	iUserID := iPostCreateDTO.UserID
-	iTitle := iPostCreateDTO.Title
-	iContent := iPostCreateDTO.Content
-	iIsAnonymous := iPostCreateDTO.IsAnonymous
+func (m *PostService) CreatePost(postCreateDTO *dto.PostCreateRequestDTO) (res *dto.PostCreateResponseDTO, err error) {
+	userID := postCreateDTO.UserID
+	title := postCreateDTO.Title
+	content := postCreateDTO.Content
+	isAnonymous := postCreateDTO.IsAnonymous
 
 	// todo 可能还要判断用户是否被禁言
 
-	iPost, err := m.Dao.CreatePost(iUserID, iTitle, iContent, *iIsAnonymous)
+	post, err := m.Dao.CreatePost(userID, title, content, *isAnonymous)
 	if err != nil {
 		return
 	}
 	res = &dto.PostCreateResponseDTO{
-		ID:          iPost.ID,
-		UserID:      iPost.UserID,
-		Title:       iPost.Title,
-		Content:     iPost.Content,
-		IsAnonymous: iPost.IsAnonymous,
-		CreatedAt:   iPost.CreatedAt,
-		UpdatedAt:   iPost.UpdatedAt,
-		DeletedAt:   iPost.DeletedAt,
+		ID:          post.ID,
+		UserID:      post.UserID,
+		Title:       post.Title,
+		Content:     post.Content,
+		IsAnonymous: post.IsAnonymous,
+		CreatedAt:   post.CreatedAt,
+		UpdatedAt:   post.UpdatedAt,
+		DeletedAt:   post.DeletedAt,
 	}
 	return
 }
 
 // Like 用户喜欢帖子
-func (m *PostService) Like(iPostLikeRequestDTO *dto.PostLikeRequestDTO) (err error) {
-	iUserID := iPostLikeRequestDTO.UserID
-	iPostID := iPostLikeRequestDTO.PostID
-	err = m.Dao.LikePost(iUserID, iPostID)
+func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err error) {
+	userID := postLikeRequestDTO.UserID
+	postID := postLikeRequestDTO.PostID
+	err = m.Dao.LikePost(userID, postID)
 	return
 }
 
 // Collect 收藏帖子
-func (m *PostService) Collect(iPostCollectRequestDTO *dto.PostCollectRequestDTO) (err error) {
-	iUserID := iPostCollectRequestDTO.UserID
-	iPostID := iPostCollectRequestDTO.PostID
-	err = m.Dao.CollectPost(iUserID, iPostID)
+func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) (err error) {
+	userID := postCollectRequestDTO.UserID
+	postID := postCollectRequestDTO.PostID
+	err = m.Dao.CollectPost(userID, postID)
 	return
 }
 
 // List 查询帖子列表
-func (m *PostService) List(iPostListRequestDTO *dto.PostListTRequestDTO) (res dto.PostListTResponseDTO, err error) {
-	iUserID := iPostListRequestDTO.UserID
-	iPage := iPostListRequestDTO.Page
+func (m *PostService) List(postListRequestDTO *dto.PostListTRequestDTO) (res *dto.PostListTResponseDTO, err error) {
+	userID := postListRequestDTO.UserID
+	page := postListRequestDTO.Page
 
-	// todo 判断用户是否有查看被删掉的帖子的权限
-
-	posts, total, err := m.Dao.ListPostOverviews(iPage, iUserID)
+	// 目前的设定是该接口无法查询被删掉的帖子
+	posts, total, err := m.Dao.ListPostOverviews(page, userID)
 	if err != nil {
 		return
 	}
 
-	// todo 查看用户是否有看匿名帖子的楼主信息的权限
-	if true {
-		for i := range posts {
-			if posts[i].IsAnonymous {
-				posts[i].UserAvatar = ""
-				posts[i].UserID = 0
-				posts[i].UserName = "匿名用户"
-			}
+	// 过滤匿名信息
+	for i := range posts {
+		if posts[i].IsAnonymous {
+			posts[i].UserAvatar = ""
+			posts[i].UserID = 0
+			posts[i].UserName = "匿名用户"
 		}
 	}
-	res = dto.PostListTResponseDTO{
+
+	res = &dto.PostListTResponseDTO{
 		Posts: posts,
 		Pagination: dto.PaginationInfo{
 			TotalRecords: int(total),
-			CurrentPage:  iPage,
+			CurrentPage:  page,
 			PageSize:     global.PageSize,
 			TotalPages:   (int(total) + global.PageSize - 1) / global.PageSize,
 		},
