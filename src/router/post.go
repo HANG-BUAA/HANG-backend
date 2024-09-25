@@ -6,7 +6,7 @@ import (
 )
 
 func InitPostRoutes() {
-	RegisterRoute(func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup) {
+	RegisterRoute(func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup, rgAdmin *gin.RouterGroup) {
 		postApi := api.NewPostApi()
 		{
 

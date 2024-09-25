@@ -1,7 +1,12 @@
 package model
 
 type Permission struct {
-	ID    uint   `gorm:"primarykey"`
-	Name  string `gorm:"type:varchar(50);not null;unique"`
-	Roles []Role `gorm:"many2many:permission_roles"`
+	ID          uint   `gorm:"primaryKey"`
+	Description string `gorm:"size:255"`
+	Weight      int    `gorm:"default:0"`
+}
+
+type UserPermission struct {
+	UserID       uint `gorm:"primaryKey;index"`
+	PermissionID uint `gorm:"primaryKey;index"`
 }

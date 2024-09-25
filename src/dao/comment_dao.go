@@ -56,7 +56,7 @@ func (m *CommentDao) CreateComment(userID uint, postID uint, replyTo uint, conte
 		PostID:      postID,
 		ReplyTo:     replyTo,
 		UserID:      userID,
-		Username:    user.UserName,
+		Username:    user.Username,
 		Content:     content,
 		IsAnonymous: isAnonymous,
 	}
@@ -139,7 +139,7 @@ func (m *CommentDao) ListCommentOverviews(postID uint, userID uint, page int, pa
 				isReplyToAnonymous = replyToComment.IsAnonymous
 				var replyToUser model.User
 				if err = m.Orm.First(&replyToUser, replyToComment.UserID).Error; err == nil {
-					replyToName = replyToUser.UserName
+					replyToName = replyToUser.Username
 				}
 			}
 		} else {
@@ -148,7 +148,7 @@ func (m *CommentDao) ListCommentOverviews(postID uint, userID uint, page int, pa
 				isReplyToAnonymous = post.IsAnonymous
 				var postUser model.User
 				if err = m.Orm.First(&postUser, post.UserID).Error; err == nil {
-					replyToName = postUser.UserName
+					replyToName = postUser.Username
 				}
 			}
 		}
@@ -160,7 +160,7 @@ func (m *CommentDao) ListCommentOverviews(postID uint, userID uint, page int, pa
 			ReplyToName:        replyToName,
 			IsReplyToAnonymous: isReplyToAnonymous,
 			UserID:             comment.UserID,
-			Username:           user.UserName,
+			Username:           user.Username,
 			UserAvatar:         user.Avatar,
 			Content:            comment.Content,
 			IsAnonymous:        comment.IsAnonymous,

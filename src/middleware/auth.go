@@ -3,6 +3,8 @@ package middleware
 import (
 	"HANG-backend/src/api"
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
+	"HANG-backend/src/permission"
 	"HANG-backend/src/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -19,6 +21,14 @@ func tokenErr(c *gin.Context) {
 		Status: http.StatusUnauthorized,
 		Code:   global.ERR_CODE_INVALID_TOKEN,
 		Msg:    "Invalid Token",
+	})
+}
+
+func permissionErr(c *gin.Context) {
+	api.Fail(c, api.ResponseJson{
+		Status: http.StatusUnauthorized,
+		Code:   global.ERR_CODE_PERMISSION_DENIED,
+		Msg:    "Permission Denied",
 	})
 }
 
@@ -45,6 +55,27 @@ func Auth() func(c *gin.Context) {
 
 		// 把 id 存到 context 中
 		c.Set("id", jwtCustomClaims.ID)
+		c.Next()
+	}
+}
+
+func Permission(permission permission.Permission) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		var user model.User
+		id, _ := c.Get("id")
+		if err := global.RDB.First(&user, id).Error; err != nil {
+			tokenErr(c)
+			return
+		}
+		// todo 根据 weight先判断一层
+		// 判断该用户是否有相应权限
+		var userPermission model.UserPermission
+		if err := global.RDB.Model(&userPermission).
+			Where("user_id = ? AND permission_id = ?", user.ID, uint(permission)).
+			First(&userPermission).Error; err != nil {
+			permissionErr(c)
+			return
+		}
 		c.Next()
 	}
 }

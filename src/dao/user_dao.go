@@ -2,6 +2,7 @@ package dao
 
 import (
 	"HANG-backend/src/model"
+	"HANG-backend/src/permission"
 )
 
 var userDao *UserDao
@@ -27,7 +28,7 @@ func (m *UserDao) GetUserByStudentID(studentID string) (model.User, error) {
 
 func (m *UserDao) GetUserByName(username string) (model.User, error) {
 	var user model.User
-	err := m.Orm.Where("user_name = ?", username).Find(&user).Error
+	err := m.Orm.Where("username = ?", username).Find(&user).Error
 	return user, err
 }
 
@@ -43,14 +44,18 @@ func (m *UserDao) CheckStudentIDExist(studentID string) bool {
 	return total > 0
 }
 
-func (m *UserDao) AddUser(studentID, password string) (model.User, error) {
+func (m *UserDao) AddUser(studentID, password string, role permission.Role) (model.User, error) {
 	user := model.User{
 		StudentID: studentID,
-		UserName:  studentID,
+		Username:  studentID,
 		Password:  password,
 		Role:      1,
 	}
 	if err := m.Orm.Create(&user).Error; err != nil {
+		return model.User{}, err
+	}
+	// 初始化用户权限
+	if err := permission.InitUserPermission(user.ID, role); err != nil {
 		return model.User{}, err
 	}
 	return user, nil
@@ -61,4 +66,29 @@ func (m *UserDao) UpdateUser(userID uint, updatedFields map[string]interface{}) 
 		return err
 	}
 	return nil
+}
+
+func (m *UserDao) AdminList(id *uint, studentID *string, username *string, Role *uint, page int, pageSize int) ([]model.User, error) {
+	var users []model.User
+	query := m.Orm.Unscoped().Model(&model.User{})
+	if id != nil {
+		query = query.Where("id = ?", *id)
+	}
+	if studentID != nil {
+		query = query.Where("student_id = ?", *studentID)
+	}
+	if username != nil {
+		query = query.Where("username = ?", *username)
+	}
+	if Role != nil {
+		query = query.Where("role = ?", *Role)
+	}
+
+	// 添加分页
+	offset := (page - 1) * pageSize
+	query = query.Offset(offset).Limit(pageSize).Find(&users)
+	if err := query.Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
 }

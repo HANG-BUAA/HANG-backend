@@ -3,15 +3,19 @@ package model
 import (
 	"HANG-backend/src/utils"
 	"gorm.io/gorm"
+	"time"
 )
 
 type User struct {
-	gorm.Model
+	ID        uint   `gorm:"primarykey"`
 	StudentID string `gorm:"type:varchar(20);not null"`
-	UserName  string `gorm:"type:varchar(20);not null"`
+	Username  string `gorm:"type:varchar(20);not null"`
 	Password  string `gorm:"type:varchar(255);not null"`
 	Avatar    string `gorm:"type:varchar(255)"`
 	Role      uint   `gorm:"type:int(8);not null)"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 func (m *User) Encrypt() error {

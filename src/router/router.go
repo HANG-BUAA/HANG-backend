@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-type IFnRegisterRoute = func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup)
+type IFnRegisterRoute = func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup, rgAdminGroup *gin.RouterGroup)
 
 var gfnRoutes []IFnRegisterRoute // 注册各个路由组的函数列表
 
@@ -42,10 +42,12 @@ func InitRouter() {
 	pingApi := api.NewPingApi() // 测试连通接口
 	r.GET("/ping", pingApi.Ping)
 
-	// 公共接口与用户鉴权接口
+	// 公共路由组、用户鉴权路由组，以及管理端路由组
 	rgPublic := r.Group("/api/v1/public")
 	rgAuth := r.Group("/api/v1")
+	rgAdmin := r.Group("/api/v1/admin")
 	rgAuth.Use(middleware.Auth()) // 登录鉴权
+	rgAdmin.Use(middleware.Auth())
 
 	// 注册基础平台路由（添加到gfnRoutes中）
 	initBasePlatformRoutes()
@@ -55,7 +57,7 @@ func InitRouter() {
 
 	// 循环遍历gfnRoutes，执行其中的函数
 	for _, fnRegisterRoute := range gfnRoutes {
-		fnRegisterRoute(rgPublic, rgAuth)
+		fnRegisterRoute(rgPublic, rgAuth, rgAdmin)
 	}
 
 	// 集成 swagger

@@ -3,6 +3,7 @@ package service
 import (
 	"HANG-backend/src/dao"
 	"HANG-backend/src/model"
+	"HANG-backend/src/permission"
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
 	"errors"
@@ -48,7 +49,7 @@ func (m *UserService) Login(userLoginRequestDTO *dto.UserLoginRequestDTO) (res *
 		return
 	}
 
-	token, err = utils.GenerateToken(user.ID, user.UserName)
+	token, err = utils.GenerateToken(user.ID, user.Username)
 	if err != nil {
 		err = errors.New("failed to generate token")
 	}
@@ -57,7 +58,7 @@ func (m *UserService) Login(userLoginRequestDTO *dto.UserLoginRequestDTO) (res *
 		ID:        user.ID,
 		Token:     token,
 		StudentID: user.StudentID,
-		Username:  user.UserName,
+		Username:  user.Username,
 		Role:      user.Role,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
@@ -84,14 +85,14 @@ func (m *UserService) Register(userRegisterRequestDTO *dto.UserRegisterRequestDT
 		err = errors.New("verification code expired")
 		return
 	}
-	user, err := m.Dao.AddUser(studentID, userRegisterRequestDTO.Password)
+	user, err := m.Dao.AddUser(studentID, userRegisterRequestDTO.Password, permission.User)
 	if err != nil {
 		return
 	}
 
 	res = &dto.UserRegisterResponseDTO{
 		ID:        user.ID,
-		Username:  user.UserName,
+		Username:  user.Username,
 		StudentID: user.StudentID,
 		Role:      user.Role,
 	}
@@ -122,6 +123,39 @@ func (m *UserService) UpdateAvatar(userUpdateAvatarRequestDTO *dto.UserUpdateAva
 
 	res = &dto.UserUpdateAvatarResponseDTO{
 		Url: url,
+	}
+	return
+}
+
+func (m *UserService) AdminList(requestDTO *dto.AdminUserListRequestDTO) (responseDTO *dto.AdminUserListResponseDTO, err error) {
+	id := requestDTO.ID
+	studentID := requestDTO.StudentID
+	username := requestDTO.Username
+	role := requestDTO.Role
+	page := requestDTO.Page
+	pageSize := requestDTO.PageSize
+	users, err := m.Dao.AdminList(id, studentID, username, role, page, pageSize)
+	if err != nil {
+		return
+	}
+	userOverviews := make([]dto.UserOverviewDTO, 0)
+	for i := range users {
+		userOverviews = append(userOverviews, dto.UserOverviewDTO{
+			ID:        users[i].ID,
+			StudentID: users[i].StudentID,
+			Username:  users[i].Username,
+			Role:      users[i].Role,
+			CreatedAt: users[i].CreatedAt,
+		})
+	}
+	responseDTO = &dto.AdminUserListResponseDTO{
+		Users: userOverviews,
+		Pagination: dto.PaginationInfo{
+			TotalRecords: 777777,
+			CurrentPage:  page,
+			PageSize:     pageSize,
+			TotalPages:   7777,
+		},
 	}
 	return
 }

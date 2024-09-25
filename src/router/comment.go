@@ -6,7 +6,7 @@ import (
 )
 
 func InitCommentRoutes() {
-	RegisterRoute(func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup) {
+	RegisterRoute(func(rgPublic *gin.RouterGroup, rgAuth *gin.RouterGroup, rgAdmin *gin.RouterGroup) {
 		commentApi := api.NewCommentApi()
 		{
 
