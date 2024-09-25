@@ -16,7 +16,6 @@ func InitPostRoutes() {
 			rgAuthPost.POST("", postApi.Create)
 			rgAuthPost.POST("/:post_id/like", postApi.Like)
 			rgAuthPost.POST("/:post_id/collect", postApi.Collect)
-			rgAuthPost.GET("", postApi.List)
 		}
 	})
 }

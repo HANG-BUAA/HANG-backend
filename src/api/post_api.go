@@ -88,25 +88,3 @@ func (m PostApi) Collect(c *gin.Context) {
 		},
 	})
 }
-
-// List 查询帖子列表
-func (m PostApi) List(c *gin.Context) {
-	userID, _ := c.Get("id")
-	var postListRequestDTO dto.PostListTRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postListRequestDTO}).GetError(); err != nil {
-		return
-	}
-	postListRequestDTO.UserID = userID.(uint)
-
-	postListResponseDTO, err := m.Service.List(&postListRequestDTO)
-	if err != nil {
-		m.Fail(ResponseJson{
-			Code: global.ERR_CODE_POST_FAILED,
-			Msg:  err.Error(),
-		})
-		return
-	}
-	m.OK(ResponseJson{
-		Data: *postListResponseDTO,
-	})
-}
