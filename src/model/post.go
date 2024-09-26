@@ -11,9 +11,12 @@ type Post struct {
 	Title       string         `gorm:"type: varchar(100) not null"`
 	Content     string         `gorm:"type: text not null"`
 	IsAnonymous bool           `gorm:"index;not null"`
+	LikeNum     int            `gorm:"default:0;index; not null"`
+	CollectNum  int            `gorm:"default:0;index; not null"`
 	CreatedAt   time.Time      `gorm:"index"`
 	UpdatedAt   time.Time      `gorm:"index"`
 	DeletedAt   gorm.DeletedAt `gorm:"index"`
+	Version     int            `gorm:"default:0;not null"` // 乐观锁版本号
 }
 
 type PostLike struct {

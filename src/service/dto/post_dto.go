@@ -33,6 +33,8 @@ type PostCreateResponseDTO struct {
 	Title       string         `json:"title"`
 	Content     string         `json:"content"`
 	IsAnonymous bool           `json:"is_anonymous"`
+	LikeNum     int            `json:"like_num"`
+	CollectNum  int            `json:"collect_num"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 	DeletedAt   gorm.DeletedAt `json:"deleted_at,omitempty"`

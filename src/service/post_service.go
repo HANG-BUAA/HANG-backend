@@ -1,8 +1,11 @@
 package service
 
 import (
+	"HANG-backend/src/custom_error"
 	"HANG-backend/src/dao"
+	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
+	"errors"
 )
 
 var postService *PostService
@@ -40,6 +43,8 @@ func (m *PostService) CreatePost(postCreateDTO *dto.PostCreateRequestDTO) (res *
 		Title:       post.Title,
 		Content:     post.Content,
 		IsAnonymous: post.IsAnonymous,
+		LikeNum:     post.LikeNum,
+		CollectNum:  post.CollectNum,
 		CreatedAt:   post.CreatedAt,
 		UpdatedAt:   post.UpdatedAt,
 		DeletedAt:   post.DeletedAt,
@@ -51,14 +56,26 @@ func (m *PostService) CreatePost(postCreateDTO *dto.PostCreateRequestDTO) (res *
 func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err error) {
 	userID := postLikeRequestDTO.UserID
 	postID := postLikeRequestDTO.PostID
-	err = m.Dao.LikePost(userID, postID)
-	return
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Like(userID, postID)
+		if err == nil {
+			// 收藏成功
+			return
+		}
+
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			// 并发版本冲突，重试
+			continue
+		}
+		return
+	}
+	return custom_error.NewOptimisticLockError()
 }
 
 // Collect 收藏帖子
 func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) (err error) {
 	userID := postCollectRequestDTO.UserID
 	postID := postCollectRequestDTO.PostID
-	err = m.Dao.CollectPost(userID, postID)
+	err = m.Dao.Collect(userID, postID)
 	return
 }

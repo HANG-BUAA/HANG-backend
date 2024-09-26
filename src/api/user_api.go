@@ -99,7 +99,7 @@ func (m UserApi) UploadAvatar(c *gin.Context) {
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_UPLOAD_MISSING_FIELD,
-			Msg:  "error when fetching avatar",
+			Msg:  "custom_error when fetching avatar",
 		})
 		return
 	}
