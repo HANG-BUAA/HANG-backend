@@ -1,5 +1,6 @@
 package custom_error
 
+// OptimisticLockError 乐观锁冲突错误
 type OptimisticLockError struct {
 }
 

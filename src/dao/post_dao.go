@@ -47,9 +47,26 @@ func (m *PostDao) CreatePost(userID uint, title string, content string, isAnonym
 
 // Like 用户喜欢某个帖子
 func (m *PostDao) Like(userID uint, postID uint) error {
-	var postLike model.PostLike
+	// 检查用户和帖子是否存在
+	var (
+		user model.User
+		post model.Post
+	)
+	if err := m.Orm.Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user does not exist")
+		}
+		return err
+	}
+	if err := m.Orm.Where("id = ?", postID).First(&post).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("post does not exist")
+		}
+		return err
+	}
 
 	// 查询用户是否已经喜欢了该帖子
+	var postLike model.PostLike
 	err := m.Orm.Where("user_id = ? AND post_id = ?", userID, postID).First(&postLike).Error
 	if err == nil {
 		// 用户已经喜欢了该帖子
@@ -57,14 +74,27 @@ func (m *PostDao) Like(userID uint, postID uint) error {
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
-	newPostLike := model.PostLike{
-		UserID: userID,
-		PostID: postID,
-	}
-	if err := m.Orm.Create(&newPostLike).Error; err != nil {
-		return err
-	}
-	return nil
+
+	// 使用事务保证操作原子性
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		newPostLike := model.PostLike{
+			UserID: userID,
+			PostID: postID,
+		}
+		if err := tx.Create(&newPostLike).Error; err != nil {
+			return err
+		}
+
+		// 动态维护 Post 表中的喜欢数字段，使用乐观锁防止并发状态下数据不一致的情况
+		result := tx.Model(&model.Post{}).Where("id = ? AND like_version = ?", postID, post.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     post.LikeNum + 1,
+			"like_version": post.LikeVersion + 1,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
 }
 
 // Collect 用户收藏帖子
@@ -107,9 +137,9 @@ func (m *PostDao) Collect(userID uint, postID uint) error {
 		}
 
 		// 动态维护 Post 表中的收藏数字段，使用乐观锁防止并发状态下数据不一致的情况
-		result := tx.Model(&model.Post{}).Where("id = ? AND version = ?", postID, post.Version).Updates(map[string]interface{}{
-			"collect_num": post.CollectNum + 1,
-			"version":     post.Version + 1,
+		result := tx.Model(&model.Post{}).Where("id = ? AND collect_version = ?", postID, post.CollectVersion).Updates(map[string]interface{}{
+			"collect_num":     post.CollectNum + 1,
+			"collect_version": post.CollectVersion + 1,
 		})
 		if result.RowsAffected == 0 {
 			return custom_error.NewOptimisticLockError()

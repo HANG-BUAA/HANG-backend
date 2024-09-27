@@ -5,21 +5,6 @@ import (
 	"time"
 )
 
-type PostOverviewDTO struct {
-	ID           uint   `json:"id"`
-	UserID       uint   `json:"user_id,omitempty"`
-	UserName     string `json:"user_name"`
-	UserAvatar   string `json:"user_avatar,omitempty"`
-	Title        string `json:"title"`
-	Content      string `json:"content"`
-	IsAnonymous  bool   `json:"is_anonymous"`
-	LikeNum      int    `json:"like_num"`
-	CollectNum   int    `json:"collect_num"`
-	CommentNum   int    `json:"comment_num"`
-	HasLiked     bool   `json:"has_liked"`     // 是否已经喜欢
-	HasCollected bool   `json:"has_collected"` // 是否已经收藏
-}
-
 type PostCreateRequestDTO struct {
 	UserID      uint
 	Title       string `json:"title" form:"title" binding:"required" required_err:"title is Required"`

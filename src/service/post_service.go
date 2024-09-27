@@ -59,7 +59,7 @@ func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err erro
 	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
 		err = m.Dao.Like(userID, postID)
 		if err == nil {
-			// 收藏成功
+			// 喜欢成功
 			return
 		}
 
@@ -76,6 +76,18 @@ func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err erro
 func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) (err error) {
 	userID := postCollectRequestDTO.UserID
 	postID := postCollectRequestDTO.PostID
-	err = m.Dao.Collect(userID, postID)
-	return
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Collect(userID, postID)
+		if err == nil {
+			// 收藏成功
+			return
+		}
+
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			// 并发版本冲突，重试
+			continue
+		}
+		return
+	}
+	return custom_error.NewOptimisticLockError()
 }
