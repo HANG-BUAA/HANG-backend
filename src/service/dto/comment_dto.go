@@ -29,7 +29,7 @@ type CommentOverviewDTO struct {
 type CommentCreateRequestDTO struct {
 	UserID         uint
 	PostID         uint   `json:"post_id" form:"post_id" binding:"required" required_err:"post_id is Required"`
-	ReplyCommentID uint   `json:"reply_comment_id" form:"reply_comment_id" binding:"required" required_err:"reply_comment_id is Required"`
+	ReplyCommentID *uint  `json:"reply_comment_id" form:"reply_comment_id" binding:"required" required_err:"reply_comment_id is Required"`
 	Content        string `json:"content" form:"content" binding:"required" required_err:"post_id is Required"`
 	IsAnonymous    *bool  `json:"is_anonymous" form:"is_anonymous" binding:"required" required_err:"is_anonymous is Required"`
 }
