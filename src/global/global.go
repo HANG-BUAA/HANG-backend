@@ -13,5 +13,5 @@ var (
 )
 
 const (
-	PageSize int = 20 // 分页大小
+	OptimisticLockMaxRetries = 3
 )

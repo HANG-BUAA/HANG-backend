@@ -1,9 +1,11 @@
 package service
 
 import (
+	"HANG-backend/src/custom_error"
 	"HANG-backend/src/dao"
 	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
+	"errors"
 )
 
 var postService *PostService
@@ -41,6 +43,8 @@ func (m *PostService) CreatePost(postCreateDTO *dto.PostCreateRequestDTO) (res *
 		Title:       post.Title,
 		Content:     post.Content,
 		IsAnonymous: post.IsAnonymous,
+		LikeNum:     post.LikeNum,
+		CollectNum:  post.CollectNum,
 		CreatedAt:   post.CreatedAt,
 		UpdatedAt:   post.UpdatedAt,
 		DeletedAt:   post.DeletedAt,
@@ -52,46 +56,38 @@ func (m *PostService) CreatePost(postCreateDTO *dto.PostCreateRequestDTO) (res *
 func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err error) {
 	userID := postLikeRequestDTO.UserID
 	postID := postLikeRequestDTO.PostID
-	err = m.Dao.LikePost(userID, postID)
-	return
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Like(userID, postID)
+		if err == nil {
+			// 喜欢成功
+			return
+		}
+
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			// 并发版本冲突，重试
+			continue
+		}
+		return
+	}
+	return custom_error.NewOptimisticLockError()
 }
 
 // Collect 收藏帖子
 func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) (err error) {
 	userID := postCollectRequestDTO.UserID
 	postID := postCollectRequestDTO.PostID
-	err = m.Dao.CollectPost(userID, postID)
-	return
-}
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Collect(userID, postID)
+		if err == nil {
+			// 收藏成功
+			return
+		}
 
-// List 查询帖子列表
-func (m *PostService) List(postListRequestDTO *dto.PostListTRequestDTO) (res *dto.PostListTResponseDTO, err error) {
-	userID := postListRequestDTO.UserID
-	page := postListRequestDTO.Page
-
-	// 目前的设定是该接口无法查询被删掉的帖子
-	posts, total, err := m.Dao.ListPostOverviews(page, userID)
-	if err != nil {
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			// 并发版本冲突，重试
+			continue
+		}
 		return
 	}
-
-	// 过滤匿名信息
-	for i := range posts {
-		if posts[i].IsAnonymous {
-			posts[i].UserAvatar = ""
-			posts[i].UserID = 0
-			posts[i].UserName = "匿名用户"
-		}
-	}
-
-	res = &dto.PostListTResponseDTO{
-		Posts: posts,
-		Pagination: dto.PaginationInfo{
-			TotalRecords: int(total),
-			CurrentPage:  page,
-			PageSize:     global.PageSize,
-			TotalPages:   (int(total) + global.PageSize - 1) / global.PageSize,
-		},
-	}
-	return
+	return custom_error.NewOptimisticLockError()
 }
