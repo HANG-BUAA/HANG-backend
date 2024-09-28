@@ -90,7 +90,7 @@ func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto
 	pageSize := postListRequestDTO.PageSize
 	userID := postListRequestDTO.UserID
 
-	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 List 服务里使用
+	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 ListFirstLevel 服务里使用
 	posts, total, err := m.Dao.List(page, pageSize)
 	if err != nil {
 		return

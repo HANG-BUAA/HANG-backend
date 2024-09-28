@@ -44,10 +44,12 @@ type CommentLikeRequestDTO struct {
 }
 
 type CommentListRequestDTO struct {
-	Page     int
-	PageSize int
-	UserID   uint
-	PostID   uint `json:"post_id" form:"post_id" binding:"required" required_err:"post_id is Required"`
+	Page      int
+	PageSize  int
+	UserID    uint
+	PostID    uint `json:"post_id" form:"post_id"`
+	CommentID uint `json:"comment_id" form:"comment_id"`
+	Level     int  `json:"level" form:"level" binding:"required" required_err:"level is Required"`
 }
 
 type CommentListResponseDTO struct {

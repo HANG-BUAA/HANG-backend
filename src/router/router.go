@@ -110,5 +110,6 @@ func registerCustomValidator() {
 			}
 			return false
 		})
+
 	}
 }

@@ -50,6 +50,7 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) (err error) {
 	userID := commentLikeRequestDTO.UserID
 	commentID := commentLikeRequestDTO.CommentID
+	// todo 参数校验的工作应当放到 service 层
 	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
 		err = m.Dao.Like(userID, commentID)
 		if err == nil {
@@ -63,13 +64,49 @@ func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) 
 	return custom_error.NewOptimisticLockError()
 }
 
-func (m *CommentService) List(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
+// ListFirstLevel 列出某帖子下一级评论列表
+func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
 	page := commentListRequestDTO.Page
 	pageSize := commentListRequestDTO.PageSize
 	userID := commentListRequestDTO.UserID
 	postID := commentListRequestDTO.PostID
 
-	comments, total, err := m.Dao.List(postID, page, pageSize)
+	// 校验帖子是否存在
+	_, ok := m.Dao.CheckPostExist(postID)
+	if !ok {
+		return nil, errors.New("post not exist")
+	}
+
+	comments, total, err := m.Dao.ListFirstLevel(postID, page, pageSize)
+	if err != nil {
+		return
+	}
+	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, userID)
+	if err != nil {
+		return
+	}
+
+	res = &dto.CommentListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Comments:   overviews,
+	}
+	return
+}
+
+// ListSecondLevel 列出某一级评论下二级评论列表
+func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
+	page := commentListRequestDTO.Page
+	pageSize := commentListRequestDTO.PageSize
+	userID := commentListRequestDTO.UserID
+	commentID := commentListRequestDTO.CommentID
+
+	// 校验一级评论是否存在
+	_, ok := m.Dao.CheckCommentExist(commentID)
+	if !ok {
+		return nil, errors.New("comment not exist")
+	}
+
+	comments, total, err := m.Dao.ListSecondLevel(commentID, page, pageSize)
 	if err != nil {
 		return
 	}

@@ -76,6 +76,7 @@ func (m *CommentDao) ConvertCommentModelToOverviewDTO(comment *model.Comment, us
 }
 
 func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint, content string, isAnonymous bool) (*model.Comment, error) {
+	// todo 这个校验放到 service 层
 	// 检查用户、帖子、回复的评论是否存在，以及合法性
 	var (
 		user    model.User
@@ -320,7 +321,8 @@ func (m *CommentDao) Like(userID, commentID uint) error {
 	})
 }
 
-func (m *CommentDao) List(postID uint, page, pageSize int) ([]model.Comment, int, error) {
+// ListFirstLevel 列出某个帖子下一级评论列表
+func (m *CommentDao) ListFirstLevel(postID uint, page, pageSize int) ([]model.Comment, int, error) {
 	// 计算总数
 	var total int64
 	if err := m.Orm.Model(&model.Comment{}).Where("post_id = ? AND reply_comment_id = ?", postID, 0).Count(&total).Error; err != nil {
@@ -338,4 +340,42 @@ func (m *CommentDao) List(postID uint, page, pageSize int) ([]model.Comment, int
 		return nil, 0, err
 	}
 	return comments, int(total), nil
+}
+
+// ListSecondLevel 列出某个一级评论下二级评论列表
+func (m *CommentDao) ListSecondLevel(commendID uint, page, pageSize int) ([]model.Comment, int, error) {
+	// 计算总数
+	var total int64
+	if err := m.Orm.Model(&model.Comment{}).Where("reply_root_comment_id = ?", commendID).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	var comments []model.Comment
+	query := m.Orm.Model(&model.Comment{}).
+		Where("reply_root_comment_id = ?", commendID).
+		Limit(pageSize).
+		Offset(offset).
+		Order("id desc")
+	if err := query.Find(&comments).Error; err != nil {
+		return nil, 0, err
+	}
+	return comments, int(total), nil
+}
+
+// CheckCommentExist 检测帖子是否存在
+func (m *CommentDao) CheckCommentExist(commentID uint) (*model.Comment, bool) {
+	var comment model.Comment
+	if err := m.Orm.Where("id = ?", commentID).First(&comment).Error; err != nil {
+		return nil, false
+	}
+	return &comment, true
+}
+
+func (m *CommentDao) CheckPostExist(postID uint) (*model.Post, bool) {
+	var post model.Post
+	if err := m.Orm.Where("id = ?", postID).First(&post).Error; err != nil {
+		return nil, false
+	}
+	return &post, true
 }

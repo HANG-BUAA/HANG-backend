@@ -70,7 +70,7 @@ func (m CommentApi) Like(c *gin.Context) {
 	})
 }
 
-func (m CommentApi) List(c *gin.Context) {
+func (m CommentApi) ListFirstLevel(c *gin.Context) {
 	userID := c.MustGet("id")
 	page := c.MustGet("page").(int)
 	pageSize := c.MustGet("page_size").(int)
@@ -82,7 +82,36 @@ func (m CommentApi) List(c *gin.Context) {
 	commentListRequestDTO.Page = page
 	commentListRequestDTO.PageSize = pageSize
 
-	comments, err := m.Service.List(&commentListRequestDTO)
+	// 根据 level 选择服务
+	var comments *dto.CommentListResponseDTO
+	var err error
+	level := commentListRequestDTO.Level
+	if level == 1 {
+		if commentListRequestDTO.PostID == 0 {
+			m.Fail(ResponseJson{
+				Code: global.ERR_CODE_COMMENT_FAILED,
+				Msg:  "post_id is Required",
+			})
+			return
+		}
+		comments, err = m.Service.ListFirstLevel(&commentListRequestDTO)
+	} else if level == 2 {
+		if commentListRequestDTO.CommentID == 0 {
+			m.Fail(ResponseJson{
+				Code: global.ERR_CODE_COMMENT_FAILED,
+				Msg:  "comment_id is Required",
+			})
+			return
+		}
+		comments, err = m.Service.ListSecondLevel(&commentListRequestDTO)
+	} else {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_COMMENT_FAILED,
+			Msg:  "invalid level",
+		})
+		return
+	}
+
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_COMMENT_FAILED,
