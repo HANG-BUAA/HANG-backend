@@ -12,19 +12,19 @@ type PostAuthorDTO struct {
 }
 
 type PostOverviewDTO struct {
-	ID          uint           `json:"id"`
-	Author      PostAuthorDTO  `json:"author"`
-	Title       string         `json:"title"`
-	Content     string         `json:"content"`
-	IsAnonymous bool           `json:"is_anonymous"`
-	CollectNum  int            `json:"collect_num"`
-	LikeNum     int            `json:"like_num"`
-	CommentNum  int            `json:"comment_num"`
-	IsLiked     bool           `json:"is_liked"`
-	IsCollected bool           `json:"is_collect"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"deleted_at"`
+	ID           uint           `json:"id"`
+	Author       PostAuthorDTO  `json:"author"`
+	Title        string         `json:"title"`
+	Content      string         `json:"content"`
+	IsAnonymous  bool           `json:"is_anonymous"`
+	CollectNum   int            `json:"collect_num"`
+	LikeNum      int            `json:"like_num"`
+	CommentNum   int            `json:"comment_num"`
+	HasLiked     bool           `json:"has_liked"`
+	HasCollected bool           `json:"has_collected"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `json:"deleted_at"`
 }
 
 type PostCreateRequestDTO struct {

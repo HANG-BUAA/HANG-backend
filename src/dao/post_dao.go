@@ -3,6 +3,8 @@ package dao
 import (
 	"HANG-backend/src/custom_error"
 	"HANG-backend/src/model"
+	"HANG-backend/src/service/dto"
+	"HANG-backend/src/utils"
 	"errors"
 	"gorm.io/gorm"
 )
@@ -20,6 +22,43 @@ func NewPostDao() *PostDao {
 		}
 	}
 	return postDao
+}
+
+func (m *PostDao) ConvertPostModelToOverviewDTO(post *model.Post, userID uint) (*dto.PostOverviewDTO, error) {
+	// 获取帖子作者信息
+	userName, userAvatar, err := m.getPostUserNameAndAvatar(post)
+	if err != nil {
+		return nil, err
+	}
+
+	// 计算帖子的评论数
+	var commentNum int64
+	if err := m.Orm.Model(&model.Comment{}).Where("post_id = ?", post.ID).Count(&commentNum).Error; err != nil {
+		return nil, err
+	}
+
+	var postLike model.PostLike
+	var postCollect model.PostCollect
+
+	return &dto.PostOverviewDTO{
+		ID: post.ID,
+		Author: dto.PostAuthorDTO{
+			UserID:     utils.IfThenElse(post.IsAnonymous, uint(0), userID).(uint),
+			UserName:   userName,
+			UserAvatar: userAvatar,
+		},
+		Title:        post.Title,
+		Content:      post.Content,
+		IsAnonymous:  post.IsAnonymous,
+		LikeNum:      post.LikeNum,
+		CollectNum:   post.CollectNum,
+		HasCollected: m.Orm.Where("post_id = ? AND user_id = ?", post.ID, userID).First(&postCollect).Error == nil,
+		HasLiked:     m.Orm.Where("post_id = ? AND user_id = ?", post.ID, userID).First(&postLike).Error == nil,
+		CommentNum:   int(commentNum),
+		CreatedAt:    post.CreatedAt,
+		UpdatedAt:    post.UpdatedAt,
+		DeletedAt:    post.DeletedAt,
+	}, nil
 }
 
 // CreatePost 创建帖子
@@ -148,7 +187,7 @@ func (m *PostDao) Collect(userID uint, postID uint) error {
 	})
 }
 
-func (m *PostDao) GetPostUserNameAndAvatar(post *model.Post) (string, string, error) {
+func (m *PostDao) getPostUserNameAndAvatar(post *model.Post) (string, string, error) {
 	if post.IsAnonymous {
 		return "洞主", "匿名的头像，还没想好", nil
 	}

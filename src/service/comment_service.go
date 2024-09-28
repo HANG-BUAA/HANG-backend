@@ -38,29 +38,11 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 		return
 	}
 
-	res = &dto.CommentCreateResponseDTO{
-		ID:     comment.ID,
-		PostID: comment.PostID,
-		Author: dto.CommentAuthorDTO{
-			UserID:   comment.UserID,
-			UserName: comment.UserName,
-			UserAvatar: func() string {
-				_, avatar, _ := m.Dao.GetCommentUserNameAndAvatar(comment)
-				return avatar
-			}(),
-		},
-		ReplyCommentID:     comment.ReplyCommentID,
-		ReplyRootCommentID: comment.ReplyRootCommentID,
-		ReplyUserName:      comment.ReplyUserName,
-		Content:            comment.Content,
-		LikeNum:            0, // 刚创建的评论，默认没有喜欢数
-		IsLiked:            false,
-		IsAnonymous:        comment.IsAnonymous,
-		IsReplyAnonymous:   comment.IsReplyAnonymous,
-		CreatedAt:          comment.CreatedAt,
-		UpdatedAt:          comment.UpdatedAt,
-		DeletedAt:          comment.DeletedAt,
+	tmp, err := m.Dao.ConvertCommentModelToOverviewDTO(comment, userID)
+	if err != nil {
+		return nil, err
 	}
+	res = (*dto.CommentCreateResponseDTO)(tmp)
 	return
 }
 

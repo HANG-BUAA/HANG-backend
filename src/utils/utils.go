@@ -18,6 +18,13 @@ func AppendError(existErr, newErr error) error {
 	}
 }
 
+func IfThenElse(condition bool, a any, b any) any {
+	if condition {
+		return a
+	}
+	return b
+}
+
 // UploadFile 上传文件到指定目录，返回最终目录
 func UploadFile(file *multipart.FileHeader, dst string) (string, error) {
 	folderPath := filepath.Join("images", dst)

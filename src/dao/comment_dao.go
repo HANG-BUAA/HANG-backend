@@ -3,6 +3,8 @@ package dao
 import (
 	"HANG-backend/src/custom_error"
 	"HANG-backend/src/model"
+	"HANG-backend/src/service/dto"
+	"HANG-backend/src/utils"
 	"errors"
 	"fmt"
 	"gorm.io/gorm"
@@ -23,6 +25,42 @@ func NewCommentDao() *CommentDao {
 		}
 	}
 	return commentDao
+}
+
+func (m *CommentDao) ConvertCommentModelToOverviewDTO(comment *model.Comment, userID uint) (*dto.CommentOverviewDTO, error) {
+	userName, userAvatar, err := m.getCommentUserNameAndAvatar(comment)
+	if err != nil {
+		return nil, err
+	}
+
+	// 计算回复的人的名字
+	replyUserName, err := m.getReplyUserName(comment)
+	if err != nil {
+		return nil, err
+	}
+
+	var commentLike model.CommentLike
+
+	return &dto.CommentOverviewDTO{
+		ID:     comment.ID,
+		PostID: comment.PostID,
+		Author: dto.CommentAuthorDTO{
+			UserID:     utils.IfThenElse(comment.IsAnonymous, uint(0), comment.UserID).(uint),
+			UserName:   userName,
+			UserAvatar: userAvatar,
+		},
+		ReplyCommentID:     comment.ReplyCommentID,
+		ReplyRootCommentID: comment.ReplyRootCommentID,
+		ReplyUserName:      replyUserName,
+		Content:            comment.Content,
+		LikeNum:            comment.LikeNum,
+		HasLiked:           m.Orm.Where("comment_id = ? AND user_id = ?", comment.ID, userID).First(&commentLike).Error == nil,
+		IsAnonymous:        comment.IsAnonymous,
+		IsReplyAnonymous:   comment.IsReplyAnonymous,
+		CreatedAt:          comment.CreatedAt,
+		UpdatedAt:          comment.UpdatedAt,
+		DeletedAt:          comment.DeletedAt,
+	}, nil
 }
 
 func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint, content string, isAnonymous bool) (*model.Comment, error) {
@@ -54,7 +92,7 @@ func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint
 		err                error
 	)
 	if replyCommentID == 0 {
-		// 一级评论，其 root_id 由 AfterCreate 钩子生成
+		// 一级评论，其 root_id 由 Comment 的 AfterCreate 钩子生成
 		replyUserName, err = m.getPostUserName(&post)
 		if err != nil {
 			return nil, err
@@ -63,7 +101,7 @@ func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint
 	} else {
 		// 二级评论
 		replyRootCommentID = comment.ReplyRootCommentID
-		replyUserName = comment.UserName
+		replyUserName = comment.UserName // 这里不需要查的原因是：如果回复的对象是匿名的，这样就是正确的；否则该字段没有意义，随便记录一个都可以
 		isReplyAnonymous = comment.IsAnonymous
 	}
 
@@ -95,6 +133,33 @@ func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint
 	return newComment, nil
 }
 
+// 或者评论回复的评论/帖子的展示名
+func (m *CommentDao) getReplyUserName(comment *model.Comment) (string, error) {
+	if comment.ReplyCommentID == 0 {
+		// 一级评论
+		var post model.Post
+		if err := m.Orm.Where("id = ?", comment.PostID).First(&post).Error; err != nil {
+			return "", err
+		}
+		name, err := m.getPostUserName(&post)
+		if err != nil {
+			return "", err
+		}
+		return name, nil
+	} else {
+		// 二级评论
+		var com model.Comment
+		if err := m.Orm.Where("id = ?", comment.ReplyCommentID).First(&com).Error; err != nil {
+			return "", err
+		}
+		name, err := m.getCommentUserName(&com)
+		if err != nil {
+			return "", err
+		}
+		return name, nil
+	}
+}
+
 // 获取贴主的展示名
 func (m *CommentDao) getPostUserName(post *model.Post) (string, error) {
 	if post.IsAnonymous {
@@ -107,7 +172,19 @@ func (m *CommentDao) getPostUserName(post *model.Post) (string, error) {
 	return user.Username, nil
 }
 
-func (m *CommentDao) GetCommentUserNameAndAvatar(comment *model.Comment) (string, string, error) {
+// 获取评论作者的展示名
+func (m *CommentDao) getCommentUserName(comment *model.Comment) (string, error) {
+	if comment.IsAnonymous {
+		return comment.UserName, nil
+	}
+	var user model.User
+	if err := m.Orm.Where("id = ?", comment.UserID).First(&user).Error; err != nil {
+		return "", err
+	}
+	return user.Username, nil
+}
+
+func (m *CommentDao) getCommentUserNameAndAvatar(comment *model.Comment) (string, string, error) {
 	if comment.IsAnonymous {
 		return comment.UserName, "匿名的头像的路径，还没想好", nil
 	}
