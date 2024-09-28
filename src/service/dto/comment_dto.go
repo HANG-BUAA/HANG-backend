@@ -19,6 +19,8 @@ type CommentOverviewDTO struct {
 	ReplyRootCommentID uint             `json:"reply_root_comment_id"`
 	ReplyUserName      string           `json:"reply_user_name"`
 	Content            string           `json:"content"`
+	LikeNum            int              `json:"like_num"`
+	IsLiked            bool             `json:"is_liked"`
 	IsAnonymous        bool             `json:"is_anonymous"`
 	IsReplyAnonymous   bool             `json:"is_reply_anonymous"`
 	CreatedAt          time.Time        `json:"created_at"`

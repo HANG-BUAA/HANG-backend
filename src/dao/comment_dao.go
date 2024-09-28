@@ -105,15 +105,15 @@ func (m *CommentDao) getPostUserName(post *model.Post) (string, error) {
 	return user.Username, nil
 }
 
-func (m *CommentDao) GetCommentUserAvatar(comment *model.Comment) (string, error) {
+func (m *CommentDao) GetCommentUserNameAndAvatar(comment *model.Comment) (string, string, error) {
 	if comment.IsAnonymous {
-		return "匿名的头像的路径，还没想好", nil
+		return comment.UserName, "匿名的头像的路径，还没想好", nil
 	}
 	var user model.User
 	if err := m.Orm.Where("id = ?", comment.UserID).First(&user).Error; err != nil {
-		return "", err
+		return "", "", err
 	}
-	return user.Avatar, nil
+	return user.Username, user.Avatar, nil
 }
 
 // 分配名字

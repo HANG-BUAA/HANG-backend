@@ -42,7 +42,7 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 			UserID:   comment.UserID,
 			UserName: comment.UserName,
 			UserAvatar: func() string {
-				avatar, _ := m.Dao.GetCommentUserAvatar(comment)
+				avatar, _, _ := m.Dao.GetCommentUserNameAndAvatar(comment)
 				return avatar
 			}(),
 		},
@@ -50,6 +50,8 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 		ReplyRootCommentID: comment.ReplyRootCommentID,
 		ReplyUserName:      comment.ReplyUserName,
 		Content:            comment.Content,
+		LikeNum:            0, // 刚创建的评论，默认没有喜欢数
+		IsLiked:            false,
 		IsAnonymous:        comment.IsAnonymous,
 		IsReplyAnonymous:   comment.IsReplyAnonymous,
 		CreatedAt:          comment.CreatedAt,

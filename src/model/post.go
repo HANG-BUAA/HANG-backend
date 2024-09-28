@@ -13,7 +13,6 @@ type Post struct {
 	IsAnonymous    bool           `gorm:"index;not null"`
 	LikeNum        int            `gorm:"default:0;index; not null"`
 	CollectNum     int            `gorm:"default:0;index; not null"`
-	CommentNum     int            `gorm:"default:0;index; not null"`
 	CollectVersion int            `gorm:"default:0;not null"` // 收藏操作乐观锁版本号
 	LikeVersion    int            `gorm:"default:0;not null"` // 喜欢操作的乐观锁版本号
 	CreatedAt      time.Time      `gorm:"index"`

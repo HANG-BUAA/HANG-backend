@@ -5,6 +5,28 @@ import (
 	"time"
 )
 
+type PostAuthorDTO struct {
+	UserID     uint   `json:"user_id,omitempty"`
+	UserName   string `json:"user_name"`
+	UserAvatar string `json:"user_avatar"`
+}
+
+type PostOverviewDTO struct {
+	ID          uint           `json:"id"`
+	Author      PostAuthorDTO  `json:"author"`
+	Title       string         `json:"title"`
+	Content     string         `json:"content"`
+	IsAnonymous bool           `json:"is_anonymous"`
+	CollectNum  int            `json:"collect_num"`
+	LikeNum     int            `json:"like_num"`
+	CommentNum  int            `json:"comment_num"`
+	IsLiked     bool           `json:"is_liked"`
+	IsCollected bool           `json:"is_collect"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"deleted_at"`
+}
+
 type PostCreateRequestDTO struct {
 	UserID      uint
 	Title       string `json:"title" form:"title" binding:"required" required_err:"title is Required"`
@@ -12,18 +34,7 @@ type PostCreateRequestDTO struct {
 	IsAnonymous *bool  `json:"is_anonymous" form:"is_anonymous" binding:"required" required_err:"is_anonymous is Required"`
 }
 
-type PostCreateResponseDTO struct {
-	ID          uint           `json:"id"`
-	UserID      uint           `json:"user_id"`
-	Title       string         `json:"title"`
-	Content     string         `json:"content"`
-	IsAnonymous bool           `json:"is_anonymous"`
-	LikeNum     int            `json:"like_num"`
-	CollectNum  int            `json:"collect_num"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"deleted_at,omitempty"`
-}
+type PostCreateResponseDTO PostOverviewDTO
 
 type PostLikeRequestDTO struct {
 	PostID uint `uri:"post_id" binding:"required" required_err:"post_id is Required"`
