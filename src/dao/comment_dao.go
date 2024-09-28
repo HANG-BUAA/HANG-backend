@@ -27,6 +27,18 @@ func NewCommentDao() *CommentDao {
 	return commentDao
 }
 
+func (m *CommentDao) ConvertCommentModelsToOverviewDTOs(comments []model.Comment, userID uint) ([]dto.CommentOverviewDTO, error) {
+	res := make([]dto.CommentOverviewDTO, 0)
+	for _, comment := range comments {
+		tmp, err := m.ConvertCommentModelToOverviewDTO(&comment, userID)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, *tmp)
+	}
+	return res, nil
+}
+
 func (m *CommentDao) ConvertCommentModelToOverviewDTO(comment *model.Comment, userID uint) (*dto.CommentOverviewDTO, error) {
 	userName, userAvatar, err := m.getCommentUserNameAndAvatar(comment)
 	if err != nil {
@@ -306,4 +318,24 @@ func (m *CommentDao) Like(userID, commentID uint) error {
 		}
 		return nil
 	})
+}
+
+func (m *CommentDao) List(postID uint, page, pageSize int) ([]model.Comment, int, error) {
+	// 计算总数
+	var total int64
+	if err := m.Orm.Model(&model.Comment{}).Where("post_id = ? AND reply_comment_id = ?", postID, 0).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	var comments []model.Comment
+	query := m.Orm.Model(&model.Comment{}).
+		Where("post_id = ? AND reply_comment_id = ?", postID, 0).
+		Limit(pageSize).
+		Offset(offset).
+		Order("id desc")
+	if err := query.Find(&comments).Error; err != nil {
+		return nil, 0, err
+	}
+	return comments, int(total), nil
 }

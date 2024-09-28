@@ -84,3 +84,24 @@ func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) 
 	}
 	return custom_error.NewOptimisticLockError()
 }
+
+func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto.PostListResponseDTO, err error) {
+	page := postListRequestDTO.Page
+	pageSize := postListRequestDTO.PageSize
+	userID := postListRequestDTO.UserID
+
+	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 List 服务里使用
+	posts, total, err := m.Dao.List(page, pageSize)
+	if err != nil {
+		return
+	}
+	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, userID)
+	if err != nil {
+		return
+	}
+	res = &dto.PostListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Posts:      overviews,
+	}
+	return
+}

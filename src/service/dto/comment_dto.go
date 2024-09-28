@@ -42,3 +42,15 @@ type CommentLikeRequestDTO struct {
 	CommentID uint `uri:"comment_id" binding:"required" required_err:"comment_id is Required"`
 	UserID    uint
 }
+
+type CommentListRequestDTO struct {
+	Page     int
+	PageSize int
+	UserID   uint
+	PostID   uint `json:"post_id" form:"post_id" binding:"required" required_err:"post_id is Required"`
+}
+
+type CommentListResponseDTO struct {
+	Pagination PaginationInfo       `json:"pagination"`
+	Comments   []CommentOverviewDTO `json:"comments"`
+}

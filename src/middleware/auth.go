@@ -32,7 +32,7 @@ func permissionErr(c *gin.Context) {
 	})
 }
 
-func Auth() func(c *gin.Context) {
+func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader(TOKEN_NAME)
 
@@ -59,7 +59,7 @@ func Auth() func(c *gin.Context) {
 	}
 }
 
-func Permission(permission permission.Permission) func(c *gin.Context) {
+func Permission(permission permission.Permission) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var user model.User
 		id, _ := c.Get("id")

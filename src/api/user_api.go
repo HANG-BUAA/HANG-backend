@@ -94,7 +94,7 @@ func (m UserApi) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	id, _ := c.Get("id") // 这里经过中间件的处理，一定有 id
+	id := c.MustGet("id") // 这里经过中间件的处理，一定有 id
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		m.Fail(ResponseJson{

@@ -45,3 +45,14 @@ type PostCollectRequestDTO struct {
 	PostID uint `uri:"post_id" binding:"required" required_err:"post_id is Required"`
 	UserID uint
 }
+
+type PostListRequestDTO struct {
+	Page     int // 分页相关在中间件处理
+	PageSize int
+	UserID   uint
+}
+
+type PostListResponseDTO struct {
+	Pagination PaginationInfo    `json:"pagination"`
+	Posts      []PostOverviewDTO `json:"posts"`
+}

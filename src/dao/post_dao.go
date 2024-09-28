@@ -24,6 +24,18 @@ func NewPostDao() *PostDao {
 	return postDao
 }
 
+func (m *PostDao) ConvertPostModelsToOverviewDTOs(posts []model.Post, userID uint) ([]dto.PostOverviewDTO, error) {
+	res := make([]dto.PostOverviewDTO, 0)
+	for _, post := range posts {
+		tmp, err := m.ConvertPostModelToOverviewDTO(&post, userID)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, *tmp)
+	}
+	return res, nil
+}
+
 func (m *PostDao) ConvertPostModelToOverviewDTO(post *model.Post, userID uint) (*dto.PostOverviewDTO, error) {
 	// 获取帖子作者信息
 	userName, userAvatar, err := m.getPostUserNameAndAvatar(post)
@@ -185,6 +197,25 @@ func (m *PostDao) Collect(userID uint, postID uint) error {
 		}
 		return nil
 	})
+}
+
+func (m *PostDao) List(page int, pageSize int) ([]model.Post, int, error) {
+	// 先计算总数
+	var total int64
+	if err := m.Orm.Model(&model.Post{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * pageSize
+	var posts []model.Post
+	query := m.Orm.Model(&model.Post{}).
+		Limit(pageSize).
+		Offset(offset).
+		Order("id desc")
+	if err := query.Find(&posts).Error; err != nil {
+		return nil, 0, err
+	}
+	return posts, int(total), nil
 }
 
 func (m *PostDao) getPostUserNameAndAvatar(post *model.Post) (string, string, error) {

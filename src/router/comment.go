@@ -2,6 +2,7 @@ package router
 
 import (
 	"HANG-backend/src/api"
+	"HANG-backend/src/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,6 +16,7 @@ func InitCommentRoutes() {
 		{
 			rgAuthComment.POST("", commentApi.Create)
 			rgAuthComment.POST("/:comment_id/like", commentApi.Like)
+			rgAuthComment.GET("", middleware.CheckPaginationParams(), commentApi.List)
 		}
 	})
 }

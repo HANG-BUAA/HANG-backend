@@ -62,3 +62,25 @@ func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) 
 	}
 	return custom_error.NewOptimisticLockError()
 }
+
+func (m *CommentService) List(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
+	page := commentListRequestDTO.Page
+	pageSize := commentListRequestDTO.PageSize
+	userID := commentListRequestDTO.UserID
+	postID := commentListRequestDTO.PostID
+
+	comments, total, err := m.Dao.List(postID, page, pageSize)
+	if err != nil {
+		return
+	}
+	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, userID)
+	if err != nil {
+		return
+	}
+
+	res = &dto.CommentListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Comments:   overviews,
+	}
+	return
+}
