@@ -147,3 +147,14 @@ func (m *PostDao) Collect(userID uint, postID uint) error {
 		return nil
 	})
 }
+
+func (m *PostDao) GetPostUserNameAndAvatar(post *model.Post) (string, string, error) {
+	if post.IsAnonymous {
+		return "洞主", "匿名的头像，还没想好", nil
+	}
+	var user model.User
+	if err := m.Orm.Where("id = ?", post.UserID).First(&user).Error; err != nil {
+		return "", "", err
+	}
+	return user.Username, user.Avatar, nil
+}

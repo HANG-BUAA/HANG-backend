@@ -28,7 +28,7 @@ func (m PostApi) Create(c *gin.Context) {
 	}
 	postCreateRequestDTO.UserID = userID.(uint)
 
-	postCreateResponseDTO, err := m.Service.CreatePost(&postCreateRequestDTO)
+	postCreateResponseDTO, err := m.Service.Create(&postCreateRequestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_POST_FAILED,
