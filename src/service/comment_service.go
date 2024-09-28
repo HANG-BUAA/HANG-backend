@@ -1,8 +1,11 @@
 package service
 
 import (
+	"HANG-backend/src/custom_error"
 	"HANG-backend/src/dao"
+	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
+	"errors"
 )
 
 var commentService *CommentService
@@ -42,7 +45,7 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 			UserID:   comment.UserID,
 			UserName: comment.UserName,
 			UserAvatar: func() string {
-				avatar, _, _ := m.Dao.GetCommentUserNameAndAvatar(comment)
+				_, avatar, _ := m.Dao.GetCommentUserNameAndAvatar(comment)
 				return avatar
 			}(),
 		},
@@ -59,4 +62,21 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 		DeletedAt:          comment.DeletedAt,
 	}
 	return
+}
+
+// Like 用户喜欢评论
+func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) (err error) {
+	userID := commentLikeRequestDTO.UserID
+	commentID := commentLikeRequestDTO.CommentID
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Like(userID, commentID)
+		if err == nil {
+			return
+		}
+
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
 }

@@ -1,9 +1,11 @@
 package dao
 
 import (
+	"HANG-backend/src/custom_error"
 	"HANG-backend/src/model"
 	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"strconv"
 	"sync"
 )
@@ -177,4 +179,54 @@ func releaseMutex(postID uint, lw *LockWrapper) {
 		mutexMap.Delete(postID)
 		fmt.Printf("Lock for key %d has been deleted\n", postID)
 	}
+}
+
+// Like 用户喜欢评论
+func (m *CommentDao) Like(userID, commentID uint) error {
+	// 检查用户和评论是否存在
+	var (
+		user    model.User
+		comment model.Comment
+	)
+	if err := m.Orm.Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user does not exist")
+		}
+		return err
+	}
+	if err := m.Orm.Where("id = ?", commentID).First(&comment).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("comment does not exist")
+		}
+		return err
+	}
+
+	// 查询用户是否已经喜欢了该帖子
+	var commentLike model.CommentLike
+	err := m.Orm.Where("user_id = ? AND comment_id = ?", userID, commentID).First(&commentLike).Error
+	if err == nil {
+		return errors.New("liked comment")
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	// 使用事务保证操作原子性
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		newCommentLike := model.CommentLike{
+			CommentID: commentID,
+			UserID:    userID,
+		}
+		if err := tx.Create(&newCommentLike).Error; err != nil {
+			return err
+		}
+		// 动态维护 Comment 表中的喜欢数字段，使用乐观锁防止在并发状态下数据不一致
+		result := tx.Model(&model.Comment{}).Where("id = ? AND like_version = ?", commentID, comment.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     comment.LikeNum + 1,
+			"like_version": comment.LikeVersion + 1,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
 }

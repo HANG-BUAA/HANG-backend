@@ -19,7 +19,7 @@ func NewCommentApi() CommentApi {
 	}
 }
 
-// 创建评论
+// Create 创建评论
 func (m CommentApi) Create(c *gin.Context) {
 	userID, _ := c.Get("id")
 	var commentCreateRequestDTO dto.CommentCreateRequestDTO
@@ -38,5 +38,28 @@ func (m CommentApi) Create(c *gin.Context) {
 	}
 	m.OK(ResponseJson{
 		Data: *commentCreateResponseDTO,
+	})
+}
+
+func (m CommentApi) Like(c *gin.Context) {
+	userID, _ := c.Get("id")
+	var commentLikeRequestDTO dto.CommentLikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+		return
+	}
+	commentLikeRequestDTO.UserID = userID.(uint)
+
+	err := m.Service.Like(&commentLikeRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_COMMENT_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "like success",
+		},
 	})
 }

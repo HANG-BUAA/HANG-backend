@@ -37,3 +37,8 @@ type CommentCreateRequestDTO struct {
 }
 
 type CommentCreateResponseDTO CommentOverviewDTO
+
+type CommentLikeRequestDTO struct {
+	CommentID uint `uri:"comment_id" binding:"required" required_err:"comment_id is Required"`
+	UserID    uint
+}

@@ -14,6 +14,7 @@ func InitCommentRoutes() {
 		rgAuthComment := rgAuth.Group("/comments")
 		{
 			rgAuthComment.POST("", commentApi.Create)
+			rgAuthComment.POST("/:comment_id/like", commentApi.Like)
 		}
 	})
 }
