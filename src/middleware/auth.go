@@ -24,11 +24,11 @@ func tokenErr(c *gin.Context) {
 	})
 }
 
-func permissionErr(c *gin.Context) {
+func permissionErr(c *gin.Context, p permission.Permission) {
 	api.Fail(c, api.ResponseJson{
 		Status: http.StatusUnauthorized,
 		Code:   global.ERR_CODE_PERMISSION_DENIED,
-		Msg:    "Permission Denied",
+		Msg:    "Permission Denied " + permission.Permissions[p].Description,
 	})
 }
 
@@ -59,7 +59,7 @@ func Auth() gin.HandlerFunc {
 	}
 }
 
-func Permission(permission permission.Permission) gin.HandlerFunc {
+func Permission(p permission.Permission) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var user model.User
 		id, _ := c.Get("id")
@@ -67,13 +67,23 @@ func Permission(permission permission.Permission) gin.HandlerFunc {
 			tokenErr(c)
 			return
 		}
-		// todo 根据 weight先判断一层
+
+		// 如果是管理员，根据 weight 先判断一层
+		if user.Role != uint(permission.User) {
+			permissionWeight := permission.GetPermissionWeight(p)
+			roleWeight := permission.GetRoleWeight(permission.Role(user.Role))
+			if permissionWeight <= roleWeight {
+				c.Next()
+				return
+			}
+		}
+
 		// 判断该用户是否有相应权限
 		var userPermission model.UserPermission
 		if err := global.RDB.Model(&userPermission).
-			Where("user_id = ? AND permission_id = ?", user.ID, uint(permission)).
+			Where("user_id = ? AND permission_id = ?", user.ID, uint(p)).
 			First(&userPermission).Error; err != nil {
-			permissionErr(c)
+			permissionErr(c, p)
 			return
 		}
 		c.Next()

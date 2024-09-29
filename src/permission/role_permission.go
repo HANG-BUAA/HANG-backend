@@ -70,6 +70,14 @@ var rolePermissionMap = map[Role][]Permission{
 	SuperAdmin: superAdminPermissions,
 }
 
+func GetPermissionWeight(permission Permission) int {
+	return Permissions[permission].Weight
+}
+
+func GetRoleWeight(role Role) int {
+	return Roles[role].Weight
+}
+
 func InitPermissions() {
 	// 先清空原来的表
 	global.RDB.Exec("TrUNCATE TABLE permission")
