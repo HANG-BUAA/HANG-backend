@@ -33,6 +33,13 @@ func Start() {
 		initErr = utils.AppendError(initErr, err)
 	}
 
+	// 初始化 rabbit_mq 连接
+	rabbit, err := config.InitRabbitMq()
+	global.RabbitMqChannel = rabbit
+	if err != nil {
+		initErr = utils.AppendError(initErr, err)
+	}
+
 	if initErr != nil {
 		if global.Logger != nil {
 			global.Logger.Error(initErr.Error())
@@ -46,5 +53,7 @@ func Start() {
 }
 
 func Clean() {
+	global.RabbitMqChannel.Close()
+	global.RabbitMqConnection.Close()
 	fmt.Println("=======Clean==========")
 }

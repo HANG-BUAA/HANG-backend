@@ -5,6 +5,7 @@ import (
 	"HANG-backend/src/dao"
 	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
+	"HANG-backend/src/utils"
 	"errors"
 )
 
@@ -42,6 +43,19 @@ func (m *PostService) Create(postCreateDTO *dto.PostCreateRequestDTO) (res *dto.
 		return
 	}
 	res = (*dto.PostCreateResponseDTO)(tmp)
+
+	// 创建协程，异步地将数据传输到 rabbitmq中，进而同步到 es 里
+	go func() {
+		err := utils.PublishPostMessage(utils.PostMessage{
+			post.ID,
+			post.Title,
+			post.Content,
+		})
+		if err != nil {
+			// todo 此处对于丢失的数据只写到了 logger 里，后期考虑更靠谱的方案
+			global.Logger.Error(err)
+		}
+	}()
 	return
 }
 
