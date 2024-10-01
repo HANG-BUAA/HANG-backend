@@ -199,16 +199,21 @@ func (m *PostDao) Collect(userID uint, postID uint) error {
 	})
 }
 
-func (m *PostDao) List(page int, pageSize int) ([]model.Post, int, error) {
+func (m *PostDao) List(page int, pageSize int, ids []uint) ([]model.Post, int, error) {
+	query := m.Orm.Model(&model.Post{})
+	if ids != nil {
+		query = query.Where("id IN ?", ids)
+	}
+
 	// 先计算总数
 	var total int64
-	if err := m.Orm.Model(&model.Post{}).Count(&total).Error; err != nil {
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
 	var posts []model.Post
-	query := m.Orm.Model(&model.Post{}).
+	query = query.
 		Limit(pageSize).
 		Offset(offset).
 		Order("id desc")

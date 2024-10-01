@@ -50,6 +50,7 @@ type PostListRequestDTO struct {
 	Page     int // 分页相关在中间件处理
 	PageSize int
 	UserID   uint
+	Query    string `form:"query"`
 }
 
 type PostListResponseDTO struct {

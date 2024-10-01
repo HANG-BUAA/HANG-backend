@@ -6,7 +6,13 @@ import (
 	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/spf13/viper"
+	"io"
+	"net/http"
+	"net/url"
 )
 
 var postService *PostService
@@ -103,9 +109,22 @@ func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto
 	page := postListRequestDTO.Page
 	pageSize := postListRequestDTO.PageSize
 	userID := postListRequestDTO.UserID
+	query := postListRequestDTO.Query
+
+	var ids []uint = nil
+	if query != "" {
+		ids, err = searchPostsByQuery(query)
+		if err != nil {
+			return nil, errors.New("search end error!")
+		}
+		if len(ids) == 0 {
+			// 没有匹配的结果
+			return &dto.PostListResponseDTO{}, nil
+		}
+	}
 
 	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 ListFirstLevel 服务里使用
-	posts, total, err := m.Dao.List(page, pageSize)
+	posts, total, err := m.Dao.List(page, pageSize, ids)
 	if err != nil {
 		return
 	}
@@ -118,4 +137,39 @@ func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto
 		Posts:      overviews,
 	}
 	return
+}
+
+func searchPostsByQuery(query string) ([]uint, error) {
+	baseURL := fmt.Sprintf("http://%s:%s/post",
+		viper.GetString("search_client.host"),
+		viper.GetString("search_client.port"),
+	)
+	params := url.Values{}
+	params.Add("query", query)
+	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+	resp, err := http.Get(fullURL)
+	if err != nil {
+		return []uint{}, err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return []uint{}, err
+	}
+
+	// 解析响应数据
+	var items []map[string]interface{}
+	err = json.Unmarshal(body, &items)
+	if err != nil {
+		return []uint{}, err
+	}
+
+	// 提取所有id
+	var ids []uint
+	for _, item := range items {
+		if id, ok := item["id"].(float64); ok { // JSON数字解析为float64
+			ids = append(ids, uint(id))
+		}
+	}
+	return ids, nil
 }
