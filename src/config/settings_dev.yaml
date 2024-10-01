@@ -1,0 +1,46 @@
+mode:
+  develop: true # 调试模式
+
+server:
+  port: 8000 # 服务启动的端口号
+
+db:
+  mysql:
+    username: root  # 用户名
+    password: 123456  # 密码
+    host: mysql  # 使用服务名代替 localhost
+    port: 3306  # 暴露端口
+    dbname: hang  # 数据库名
+    maxIdleConn: 10 # 最多空闲链接数
+    maxOpenConn: 10 # 最多打开连接数
+
+  redis:
+    host: redis  # 使用服务名代替 localhost
+    port: 6379  # 暴露端口
+
+rabbit_mq:
+  host: rabbitmq  # 使用服务名代替 localhost
+  port: 5672  # 端口
+  username: guest  # 用户名
+  password: guest  # 密码
+
+jwt:
+  tokenExpire: 30 # token有效时长（分钟）
+  signingKey: hang.com # 签名使用的 key
+
+log:
+  MaxSize: 1 # 日志文件最大的尺寸(M)，超限后自动分割
+  MaxBackups: 10 # 保留旧文件的最大个数
+  MaxAge: 90 # 保留旧文件的最大天数
+  Compress: false # 是否开启压缩
+
+smtp:
+  user_addr: 18646154381@163.com  # 提供服务的邮箱地址
+  smtp_addr: smtp.163.com:25  # smtp 服务器地址+端口
+  smtp_host: smtp.163.com  # smtp 服务器主机地址
+  smtp_password: MSTLOQJPDZCLVMOZ  # smtp 秘钥
+  expiration: 5  # 过期时间（分钟）
+
+search_client:  # 搜索端
+  host: search-client  # 使用服务名代替 localhost
+  port: 9200  # 端口
