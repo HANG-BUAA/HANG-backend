@@ -33,18 +33,18 @@ func NewPostService() *PostService {
 
 // Create 创建帖子
 func (m *PostService) Create(postCreateDTO *dto.PostCreateRequestDTO) (res *dto.PostCreateResponseDTO, err error) {
-	userID := postCreateDTO.UserID
+	user := postCreateDTO.User
 	title := postCreateDTO.Title
 	content := postCreateDTO.Content
 	isAnonymous := postCreateDTO.IsAnonymous
 
 	// todo 可能还要判断用户是否被禁言——中间件实现
 
-	post, err := m.Dao.CreatePost(userID, title, content, *isAnonymous)
+	post, err := m.Dao.CreatePost(user, title, content, *isAnonymous)
 	if err != nil {
 		return
 	}
-	tmp, err := m.Dao.ConvertPostModelToOverviewDTO(post, userID)
+	tmp, err := m.Dao.ConvertPostModelToOverviewDTO(post, user.ID)
 	if err != nil {
 		return
 	}
@@ -67,10 +67,16 @@ func (m *PostService) Create(postCreateDTO *dto.PostCreateRequestDTO) (res *dto.
 
 // Like 用户喜欢帖子
 func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err error) {
-	userID := postLikeRequestDTO.UserID
-	postID := postLikeRequestDTO.PostID
+	user := postLikeRequestDTO.User
+	post := postLikeRequestDTO.Post
+
+	// 判断用户是否已经喜欢了该帖子
+	if m.Dao.CheckLiked(user, post) {
+		return errors.New("liked post")
+	}
+
 	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
-		err = m.Dao.Like(userID, postID)
+		err = m.Dao.Like(user, post)
 		if err == nil {
 			// 喜欢成功
 			return
@@ -87,10 +93,16 @@ func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err erro
 
 // Collect 收藏帖子
 func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) (err error) {
-	userID := postCollectRequestDTO.UserID
-	postID := postCollectRequestDTO.PostID
+	user := postCollectRequestDTO.User
+	post := postCollectRequestDTO.Post
+
+	// 判断用户是否已经收藏了该帖子
+	if m.Dao.CheckCollected(user, post) {
+		return errors.New("collected post")
+	}
+
 	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
-		err = m.Dao.Collect(userID, postID)
+		err = m.Dao.Collect(user, post)
 		if err == nil {
 			// 收藏成功
 			return
@@ -108,7 +120,7 @@ func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) 
 func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto.PostListResponseDTO, err error) {
 	page := postListRequestDTO.Page
 	pageSize := postListRequestDTO.PageSize
-	userID := postListRequestDTO.UserID
+	user := postListRequestDTO.User
 	query := postListRequestDTO.Query
 
 	var ids []uint = nil
@@ -123,12 +135,12 @@ func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto
 		}
 	}
 
-	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 ListFirstLevel 服务里使用
+	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 List 服务里使用
 	posts, total, err := m.Dao.List(page, pageSize, ids)
 	if err != nil {
 		return
 	}
-	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, userID)
+	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, user.ID)
 	if err != nil {
 		return
 	}

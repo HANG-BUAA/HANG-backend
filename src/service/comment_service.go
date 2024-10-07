@@ -26,19 +26,23 @@ func NewCommentService() *CommentService {
 
 // Create 创建评论
 func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (res *dto.CommentCreateResponseDTO, err error) {
-	userID := commentCreateDTO.UserID
-	postID := commentCreateDTO.PostID
+	user := commentCreateDTO.User
 	replyCommentID := commentCreateDTO.ReplyCommentID
 	content := commentCreateDTO.Content
 	isAnonymous := commentCreateDTO.IsAnonymous
 
-	// todo 判断用户是否被禁言——可以加中间件
-	comment, err := m.Dao.CreateComment(userID, postID, *replyCommentID, content, *isAnonymous)
+	// 判断 post 是否存在
+	post, exist := m.Dao.CheckPostExist(commentCreateDTO.PostID)
+	if !exist {
+		return nil, errors.New("target post not found")
+	}
+
+	comment, err := m.Dao.CreateComment(user, post, *replyCommentID, content, *isAnonymous)
 	if err != nil {
 		return
 	}
 
-	tmp, err := m.Dao.ConvertCommentModelToOverviewDTO(comment, userID)
+	tmp, err := m.Dao.ConvertCommentModelToOverviewDTO(comment, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,11 +52,16 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 
 // Like 用户喜欢评论
 func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) (err error) {
-	userID := commentLikeRequestDTO.UserID
-	commentID := commentLikeRequestDTO.CommentID
-	// todo 参数校验的工作应当放到 service 层
+	user := commentLikeRequestDTO.User
+	comment := commentLikeRequestDTO.Comment
+
+	// 判断是否已经喜欢该评论
+	if m.Dao.CheckLiked(user, comment) {
+		return errors.New("liked comment")
+	}
+
 	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
-		err = m.Dao.Like(userID, commentID)
+		err = m.Dao.Like(user, comment)
 		if err == nil {
 			return
 		}
@@ -68,7 +77,7 @@ func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) 
 func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
 	page := commentListRequestDTO.Page
 	pageSize := commentListRequestDTO.PageSize
-	userID := commentListRequestDTO.UserID
+	user := commentListRequestDTO.User
 	postID := commentListRequestDTO.PostID
 
 	// 校验帖子是否存在
@@ -81,7 +90,7 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 	if err != nil {
 		return
 	}
-	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, userID)
+	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, user.ID)
 	if err != nil {
 		return
 	}
@@ -97,7 +106,7 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
 	page := commentListRequestDTO.Page
 	pageSize := commentListRequestDTO.PageSize
-	userID := commentListRequestDTO.UserID
+	userID := commentListRequestDTO.User.ID
 	commentID := commentListRequestDTO.CommentID
 
 	// 校验一级评论是否存在

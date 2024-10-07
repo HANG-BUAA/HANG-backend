@@ -75,26 +75,16 @@ func (m *CommentDao) ConvertCommentModelToOverviewDTO(comment *model.Comment, us
 	}, nil
 }
 
-func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint, content string, isAnonymous bool) (*model.Comment, error) {
-	// todo 这个校验放到 service 层
-	// 检查用户、帖子、回复的评论是否存在，以及合法性
+func (m *CommentDao) CreateComment(user *model.User, post *model.Post, replyCommentID uint, content string, isAnonymous bool) (*model.Comment, error) {
 	var (
-		user    model.User
-		post    model.Post
 		comment model.Comment
 	)
-	if err := m.Orm.Where("id = ?", userID).First(&user).Error; err != nil {
-		return nil, err
-	}
-	if err := m.Orm.Where("id = ?", postID).First(&post).Error; err != nil {
-		return nil, err
-	}
 	if replyCommentID != 0 {
 		// 是二级评论，要检查回复的评论是否 match 当前的帖子
 		if err := m.Orm.Where("id = ?", replyCommentID).First(&comment).Error; err != nil {
 			return nil, err
 		}
-		if comment.PostID != postID {
+		if comment.PostID != post.ID {
 			return nil, errors.New("comment doesn't match the post")
 		}
 	}
@@ -106,7 +96,7 @@ func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint
 	)
 	if replyCommentID == 0 {
 		// 一级评论，其 root_id 由 Comment 的 AfterCreate 钩子生成
-		replyUserName, err = m.getPostUserName(&post)
+		replyUserName, err = m.getPostUserName(post)
 		if err != nil {
 			return nil, err
 		}
@@ -119,17 +109,17 @@ func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint
 	}
 
 	// 分配“假名”——上锁
-	lw := getMutex(postID)
+	lw := getMutex(post.ID)
 	lw.mu.Lock()
-	userName, err := m.allocateCommenterName(&user, &post, isAnonymous)
+	userName, err := m.allocateCommenterName(user, post, isAnonymous)
 	if err != nil {
-		releaseMutex(postID, lw)
+		releaseMutex(post.ID, lw)
 		return nil, err
 	}
 
 	newComment := &model.Comment{
-		PostID:             postID,
-		UserID:             userID,
+		PostID:             post.ID,
+		UserID:             user.ID,
 		UserName:           userName,
 		ReplyCommentID:     replyCommentID,
 		ReplyRootCommentID: replyRootCommentID,
@@ -139,10 +129,10 @@ func (m *CommentDao) CreateComment(userID uint, postID uint, replyCommentID uint
 		IsReplyAnonymous:   isReplyAnonymous,
 	}
 	if err = m.Orm.Create(newComment).Error; err != nil {
-		releaseMutex(postID, lw)
+		releaseMutex(post.ID, lw)
 		return nil, err
 	}
-	releaseMutex(postID, lw)
+	releaseMutex(post.ID, lw)
 	return newComment, nil
 }
 
@@ -272,45 +262,18 @@ func releaseMutex(postID uint, lw *LockWrapper) {
 }
 
 // Like 用户喜欢评论
-func (m *CommentDao) Like(userID, commentID uint) error {
-	// 检查用户和评论是否存在
-	var (
-		user    model.User
-		comment model.Comment
-	)
-	if err := m.Orm.Where("id = ?", userID).First(&user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("user does not exist")
-		}
-		return err
-	}
-	if err := m.Orm.Where("id = ?", commentID).First(&comment).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errors.New("comment does not exist")
-		}
-		return err
-	}
-
-	// 查询用户是否已经喜欢了该帖子
-	var commentLike model.CommentLike
-	err := m.Orm.Where("user_id = ? AND comment_id = ?", userID, commentID).First(&commentLike).Error
-	if err == nil {
-		return errors.New("liked comment")
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-
+func (m *CommentDao) Like(user *model.User, comment *model.Comment) error {
 	// 使用事务保证操作原子性
 	return m.Orm.Transaction(func(tx *gorm.DB) error {
 		newCommentLike := model.CommentLike{
-			CommentID: commentID,
-			UserID:    userID,
+			CommentID: comment.ID,
+			UserID:    user.ID,
 		}
 		if err := tx.Create(&newCommentLike).Error; err != nil {
 			return err
 		}
 		// 动态维护 Comment 表中的喜欢数字段，使用乐观锁防止在并发状态下数据不一致
-		result := tx.Model(&model.Comment{}).Where("id = ? AND like_version = ?", commentID, comment.LikeVersion).Updates(map[string]interface{}{
+		result := tx.Model(&model.Comment{}).Where("id = ? AND like_version = ?", comment.ID, comment.LikeVersion).Updates(map[string]interface{}{
 			"like_num":     comment.LikeNum + 1,
 			"like_version": comment.LikeVersion + 1,
 		})
@@ -346,14 +309,14 @@ func (m *CommentDao) ListFirstLevel(postID uint, page, pageSize int) ([]model.Co
 func (m *CommentDao) ListSecondLevel(commendID uint, page, pageSize int) ([]model.Comment, int, error) {
 	// 计算总数
 	var total int64
-	if err := m.Orm.Model(&model.Comment{}).Where("reply_root_comment_id = ?", commendID).Count(&total).Error; err != nil {
+	if err := m.Orm.Model(&model.Comment{}).Where("reply_root_comment_id = ? AND reply_comment_id != 0", commendID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
 	var comments []model.Comment
 	query := m.Orm.Model(&model.Comment{}).
-		Where("reply_root_comment_id = ?", commendID).
+		Where("reply_root_comment_id = ? AND reply_comment_id != 0", commendID).
 		Limit(pageSize).
 		Offset(offset).
 		Order("id desc")
@@ -363,7 +326,7 @@ func (m *CommentDao) ListSecondLevel(commendID uint, page, pageSize int) ([]mode
 	return comments, int(total), nil
 }
 
-// CheckCommentExist 检测帖子是否存在
+// CheckCommentExist 检测评论是否存在
 func (m *CommentDao) CheckCommentExist(commentID uint) (*model.Comment, bool) {
 	var comment model.Comment
 	if err := m.Orm.Where("id = ?", commentID).First(&comment).Error; err != nil {
@@ -372,10 +335,19 @@ func (m *CommentDao) CheckCommentExist(commentID uint) (*model.Comment, bool) {
 	return &comment, true
 }
 
+// CheckPostExist 检测帖子是否存在
 func (m *CommentDao) CheckPostExist(postID uint) (*model.Post, bool) {
 	var post model.Post
 	if err := m.Orm.Where("id = ?", postID).First(&post).Error; err != nil {
 		return nil, false
 	}
 	return &post, true
+}
+
+func (m *CommentDao) CheckLiked(user *model.User, comment *model.Comment) bool {
+	var commentLike model.CommentLike
+	if err := m.Orm.Where("user_id = ? AND comment_id = ?", user.ID, comment.ID).First(&commentLike).Error; err != nil {
+		return false
+	}
+	return true
 }

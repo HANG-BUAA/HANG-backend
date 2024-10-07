@@ -3,6 +3,7 @@ package api
 import (
 	"HANG-backend/src/custom_error"
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
 	"HANG-backend/src/service"
 	"HANG-backend/src/service/dto"
 	"errors"
@@ -23,12 +24,12 @@ func NewCommentApi() CommentApi {
 
 // Create 创建评论
 func (m CommentApi) Create(c *gin.Context) {
-	userID := c.MustGet("id")
+	user := c.MustGet("user").(*model.User)
 	var commentCreateRequestDTO dto.CommentCreateRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentCreateRequestDTO}).GetError(); err != nil {
 		return
 	}
-	commentCreateRequestDTO.UserID = userID.(uint)
+	commentCreateRequestDTO.User = user
 
 	commentCreateResponseDTO, err := m.Service.Create(&commentCreateRequestDTO)
 	if err != nil {
@@ -48,12 +49,14 @@ func (m CommentApi) Create(c *gin.Context) {
 }
 
 func (m CommentApi) Like(c *gin.Context) {
-	userID := c.MustGet("id")
+	user := c.MustGet("user").(*model.User)
+	comment := c.MustGet("comment").(*model.Comment)
 	var commentLikeRequestDTO dto.CommentLikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentLikeRequestDTO}).GetError(); err != nil {
 		return
 	}
-	commentLikeRequestDTO.UserID = userID.(uint)
+	commentLikeRequestDTO.User = user
+	commentLikeRequestDTO.Comment = comment
 
 	err := m.Service.Like(&commentLikeRequestDTO)
 	if err != nil {
@@ -70,15 +73,15 @@ func (m CommentApi) Like(c *gin.Context) {
 	})
 }
 
-func (m CommentApi) ListFirstLevel(c *gin.Context) {
-	userID := c.MustGet("id")
+func (m CommentApi) List(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
 	page := c.MustGet("page").(int)
 	pageSize := c.MustGet("page_size").(int)
 	var commentListRequestDTO dto.CommentListRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentListRequestDTO}).GetError(); err != nil {
 		return
 	}
-	commentListRequestDTO.UserID = userID.(uint)
+	commentListRequestDTO.User = user
 	commentListRequestDTO.Page = page
 	commentListRequestDTO.PageSize = pageSize
 

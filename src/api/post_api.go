@@ -3,6 +3,7 @@ package api
 import (
 	"HANG-backend/src/custom_error"
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
 	"HANG-backend/src/service"
 	"HANG-backend/src/service/dto"
 	"errors"
@@ -23,12 +24,12 @@ func NewPostApi() PostApi {
 
 // Create 创建帖子
 func (m PostApi) Create(c *gin.Context) {
-	userID := c.MustGet("id")
+	user := c.MustGet("user").(*model.User)
 	var postCreateRequestDTO dto.PostCreateRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postCreateRequestDTO}).GetError(); err != nil {
 		return
 	}
-	postCreateRequestDTO.UserID = userID.(uint)
+	postCreateRequestDTO.User = user
 
 	postCreateResponseDTO, err := m.Service.Create(&postCreateRequestDTO)
 	if err != nil {
@@ -49,12 +50,14 @@ func (m PostApi) Create(c *gin.Context) {
 
 // Like 喜欢帖子
 func (m PostApi) Like(c *gin.Context) {
-	userID := c.MustGet("id")
+	user := c.MustGet("user").(*model.User)
+	post := c.MustGet("post").(*model.Post)
 	var postLikeRequestDTO dto.PostLikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postLikeRequestDTO}).GetError(); err != nil {
 		return
 	}
-	postLikeRequestDTO.UserID = userID.(uint)
+	postLikeRequestDTO.User = user
+	postLikeRequestDTO.Post = post
 
 	err := m.Service.Like(&postLikeRequestDTO)
 	if err != nil {
@@ -73,12 +76,14 @@ func (m PostApi) Like(c *gin.Context) {
 
 // Collect 收藏帖子
 func (m PostApi) Collect(c *gin.Context) {
-	userID := c.MustGet("id")
+	user := c.MustGet("user").(*model.User)
+	post := c.MustGet("post").(*model.Post)
 	var postCollectRequestDTO dto.PostCollectRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postCollectRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
-	postCollectRequestDTO.UserID = userID.(uint)
+	postCollectRequestDTO.User = user
+	postCollectRequestDTO.Post = post
 
 	err := m.Service.Collect(&postCollectRequestDTO)
 	if err != nil {
@@ -96,14 +101,14 @@ func (m PostApi) Collect(c *gin.Context) {
 }
 
 func (m PostApi) List(c *gin.Context) {
-	userID := c.MustGet("id")
+	user := c.MustGet("user").(*model.User)
 	page := c.MustGet("page").(int)
 	pageSize := c.MustGet("page_size").(int)
 	var postListRequestDTO dto.PostListRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postListRequestDTO}).GetError(); err != nil {
 		return
 	}
-	postListRequestDTO.UserID = userID.(uint)
+	postListRequestDTO.User = user
 	postListRequestDTO.Page = page
 	postListRequestDTO.PageSize = pageSize
 

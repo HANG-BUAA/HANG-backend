@@ -53,8 +53,15 @@ func Auth() gin.HandlerFunc {
 
 		// todo 判断 token 是否过期与续期
 
-		// 把 id 存到 context 中
-		c.Set("id", jwtCustomClaims.ID)
+		// 查用户是否存在
+		var user model.User
+		if err = global.RDB.First(&user, userId).Error; err != nil {
+			tokenErr(c)
+			return
+		}
+
+		// 把 user 存到 context 中
+		c.Set("user", &user)
 		c.Next()
 	}
 }

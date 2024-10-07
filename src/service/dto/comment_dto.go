@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"HANG-backend/src/model"
 	"gorm.io/gorm"
 	"time"
 )
@@ -29,7 +30,7 @@ type CommentOverviewDTO struct {
 }
 
 type CommentCreateRequestDTO struct {
-	UserID         uint
+	User           *model.User
 	PostID         uint   `json:"post_id" form:"post_id" binding:"required" required_err:"post_id is Required"`
 	ReplyCommentID *uint  `json:"reply_comment_id" form:"reply_comment_id" binding:"required" required_err:"reply_comment_id is Required"`
 	Content        string `json:"content" form:"content" binding:"required" required_err:"post_id is Required"`
@@ -39,14 +40,14 @@ type CommentCreateRequestDTO struct {
 type CommentCreateResponseDTO CommentOverviewDTO
 
 type CommentLikeRequestDTO struct {
-	CommentID uint `uri:"comment_id" binding:"required" required_err:"comment_id is Required"`
-	UserID    uint
+	Comment *model.Comment
+	User    *model.User
 }
 
 type CommentListRequestDTO struct {
 	Page      int
 	PageSize  int
-	UserID    uint
+	User      *model.User
 	PostID    uint `json:"post_id" form:"post_id"`
 	CommentID uint `json:"comment_id" form:"comment_id"`
 	Level     int  `json:"level" form:"level" binding:"required" required_err:"level is Required"`

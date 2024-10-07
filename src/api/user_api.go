@@ -2,6 +2,7 @@ package api
 
 import (
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
 	"HANG-backend/src/service"
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
@@ -94,7 +95,8 @@ func (m UserApi) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	id := c.MustGet("id") // 这里经过中间件的处理，一定有 id
+	user := c.MustGet("user").(*model.User)
+	id := user.ID
 	file, err := c.FormFile("avatar")
 	if err != nil {
 		m.Fail(ResponseJson{
@@ -112,7 +114,7 @@ func (m UserApi) UploadAvatar(c *gin.Context) {
 		return
 	}
 	iUserUpdateAvatarResponseDTO, err := m.Service.UpdateAvatar(&dto.UserUpdateAvatarRequestDTO{
-		ID:  id.(uint),
+		ID:  id,
 		Url: path,
 	})
 	if err != nil {

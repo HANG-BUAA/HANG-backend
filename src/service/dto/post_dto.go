@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"HANG-backend/src/model"
 	"gorm.io/gorm"
 	"time"
 )
@@ -28,7 +29,7 @@ type PostOverviewDTO struct {
 }
 
 type PostCreateRequestDTO struct {
-	UserID      uint
+	User        *model.User
 	Title       string `json:"title" form:"title" binding:"required" required_err:"title is Required"`
 	Content     string `json:"content" form:"content" binding:"required" required_err:"content is Required"`
 	IsAnonymous *bool  `json:"is_anonymous" form:"is_anonymous" binding:"required" required_err:"is_anonymous is Required"`
@@ -37,19 +38,19 @@ type PostCreateRequestDTO struct {
 type PostCreateResponseDTO PostOverviewDTO
 
 type PostLikeRequestDTO struct {
-	PostID uint `uri:"post_id" binding:"required" required_err:"post_id is Required"`
-	UserID uint
+	Post *model.Post
+	User *model.User
 }
 
 type PostCollectRequestDTO struct {
-	PostID uint `uri:"post_id" binding:"required" required_err:"post_id is Required"`
-	UserID uint
+	Post *model.Post
+	User *model.User
 }
 
 type PostListRequestDTO struct {
 	Page     int // 分页相关在中间件处理
 	PageSize int
-	UserID   uint
+	User     *model.User
 	Query    string `form:"query"`
 }
 
