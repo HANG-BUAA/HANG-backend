@@ -134,11 +134,8 @@ func (m *PostDao) Collect(user *model.User, post *model.Post) error {
 	})
 }
 
-func (m *PostDao) List(page int, pageSize int, ids []uint) ([]model.Post, int, error) {
+func (m *PostDao) CommonList(page int, pageSize int) ([]model.Post, int, error) {
 	query := m.Orm.Model(&model.Post{})
-	if ids != nil {
-		query = query.Where("id IN ?", ids)
-	}
 
 	// 先计算总数
 	var total int64
@@ -165,6 +162,15 @@ func (m *PostDao) CheckLiked(user *model.User, post *model.Post) bool {
 		return false
 	}
 	return true
+}
+
+// GetListsByIDs 根据 id 列表查出记录
+func (m *PostDao) GetListsByIDs(ids []uint) ([]model.Post, error) {
+	var posts []model.Post
+	if err := m.Orm.Where("id IN (?)", ids).Find(&posts).Error; err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
 
 // CheckCollected 判断用户是否已经收藏该帖子

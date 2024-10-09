@@ -112,7 +112,16 @@ func (m PostApi) List(c *gin.Context) {
 	postListRequestDTO.Page = page
 	postListRequestDTO.PageSize = pageSize
 
-	posts, err := m.Service.List(&postListRequestDTO)
+	var posts *dto.PostListResponseDTO
+	var err error
+
+	// 根据是否有 query 判断走哪个服务
+	if postListRequestDTO.Query != "" {
+		posts, err = m.Service.SearchList(&postListRequestDTO)
+	} else {
+		posts, err = m.Service.CommonList(&postListRequestDTO)
+	}
+
 	if err != nil {
 		m.Fail(ResponseJson{
 			Code: global.ERR_CODE_POST_FAILED,

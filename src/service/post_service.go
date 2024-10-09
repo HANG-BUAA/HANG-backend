@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 var postService *PostService
@@ -117,26 +118,14 @@ func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) 
 	return custom_error.NewOptimisticLockError()
 }
 
-func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto.PostListResponseDTO, err error) {
+// CommonList 普通查询列表（不带搜索）
+func (m *PostService) CommonList(postListRequestDTO *dto.PostListRequestDTO) (res *dto.PostListResponseDTO, err error) {
 	page := postListRequestDTO.Page
 	pageSize := postListRequestDTO.PageSize
 	user := postListRequestDTO.User
-	query := postListRequestDTO.Query
 
-	var ids []uint = nil
-	if query != "" {
-		ids, err = searchPostsByQuery(query)
-		if err != nil {
-			return nil, errors.New("search end error!")
-		}
-		if len(ids) == 0 {
-			// 没有匹配的结果
-			return &dto.PostListResponseDTO{}, nil
-		}
-	}
-
-	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 List 服务里使用
-	posts, total, err := m.Dao.List(page, pageSize, ids)
+	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 CommonList 服务里使用
+	posts, total, err := m.Dao.CommonList(page, pageSize)
 	if err != nil {
 		return
 	}
@@ -151,37 +140,103 @@ func (m *PostService) List(postListRequestDTO *dto.PostListRequestDTO) (res *dto
 	return
 }
 
-func searchPostsByQuery(query string) ([]uint, error) {
+func (m *PostService) SearchList(postListRequestDTO *dto.PostListRequestDTO) (res *dto.PostListResponseDTO, err error) {
+	// todo baseURL 换成全局变量
 	baseURL := fmt.Sprintf("http://%s:%s/post",
 		viper.GetString("search_client.host"),
 		viper.GetString("search_client.port"),
 	)
+	user := postListRequestDTO.User
+	query := postListRequestDTO.Query
+	page := postListRequestDTO.Page
+	pageSize := postListRequestDTO.PageSize
+
 	params := url.Values{}
 	params.Add("query", query)
+	params.Add("page", strconv.Itoa(page))
+	params.Add("page_size", strconv.Itoa(pageSize))
 	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	// 向搜索端发送请求
 	resp, err := http.Get(fullURL)
 	if err != nil {
-		return []uint{}, err
+		return
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return []uint{}, err
+		return
 	}
 
-	// 解析响应数据
-	var items []map[string]interface{}
-	err = json.Unmarshal(body, &items)
+	// 响应结构
+	var responseBody struct {
+		Total int `json:"total"`
+		Posts []struct {
+			ID    uint    `json:"id"`
+			Score float64 `json:"score"`
+		} `json:"posts"`
+	}
+
+	err = json.Unmarshal(body, &responseBody)
 	if err != nil {
-		return []uint{}, err
+		return
 	}
 
-	// 提取所有id
 	var ids []uint
-	for _, item := range items {
-		if id, ok := item["id"].(float64); ok { // JSON数字解析为float64
-			ids = append(ids, uint(id))
-		}
+	total := responseBody.Total
+	for _, post := range responseBody.Posts {
+		ids = append(ids, post.ID)
 	}
-	return ids, nil
+
+	// 根据返回的 id 列表获取列表
+	posts, err := m.Dao.GetListsByIDs(ids)
+	if err != nil {
+		return
+	}
+
+	// 结构体转换
+	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, user.ID)
+	if err != nil {
+		return
+	}
+	res = &dto.PostListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Posts:      overviews,
+	}
+	return
 }
+
+//func searchPostsByQuery(query string) ([]uint, error) {
+//	baseURL := fmt.Sprintf("http://%s:%s/post",
+//		viper.GetString("search_client.host"),
+//		viper.GetString("search_client.port"),
+//	)
+//	params := url.Values{}
+//	params.Add("query", query)
+//	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+//	resp, err := http.Get(fullURL)
+//	if err != nil {
+//		return []uint{}, err
+//	}
+//	defer resp.Body.Close()
+//	body, err := io.ReadAll(resp.Body)
+//	if err != nil {
+//		return []uint{}, err
+//	}
+//
+//	// 解析响应数据
+//	var items []map[string]interface{}
+//	err = json.Unmarshal(body, &items)
+//	if err != nil {
+//		return []uint{}, err
+//	}
+//
+//	// 提取所有id
+//	var ids []uint
+//	for _, item := range items {
+//		if id, ok := item["id"].(float64); ok { // JSON数字解析为float64
+//			ids = append(ids, uint(id))
+//		}
+//	}
+//	return ids, nil
+//}
