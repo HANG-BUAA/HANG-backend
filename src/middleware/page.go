@@ -18,15 +18,13 @@ func paginationErr(c *gin.Context) {
 
 func CheckPaginationParams() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		page, err := strconv.Atoi(c.Query("page"))
-		if err != nil {
-			paginationErr(c)
-		}
+		cursor := c.Query("cursor")
+		c.Set("cursor", cursor) // 由于 cursor 的形式不唯一，所以直接以字符串形式存储，到具体的 service 再转换
+
 		pageSize, err := strconv.Atoi(c.DefaultQuery("page_size", "10"))
 		if err != nil || pageSize > maxSize {
 			paginationErr(c)
 		}
-		c.Set("page", page)
 		c.Set("page_size", pageSize)
 		c.Next()
 	}

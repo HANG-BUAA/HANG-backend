@@ -120,21 +120,31 @@ func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) 
 
 // CommonList 普通查询列表（不带搜索）
 func (m *PostService) CommonList(postListRequestDTO *dto.PostListRequestDTO) (res *dto.PostListResponseDTO, err error) {
-	page := postListRequestDTO.Page
 	pageSize := postListRequestDTO.PageSize
 	user := postListRequestDTO.User
 
+	tmp, err := strconv.ParseUint(postListRequestDTO.Cursor, 10, 32)
+	if err != nil {
+		tmp = 0
+	}
+	cursor := uint(tmp)
+
 	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 CommonList 服务里使用
-	posts, total, err := m.Dao.CommonList(page, pageSize)
+	posts, total, err := m.Dao.CommonList(cursor, pageSize)
 	if err != nil {
 		return
+	}
+	if cursor == 0 {
+		cursor = uint(total)
 	}
 	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, user.ID)
 	if err != nil {
 		return
 	}
+	nextCursor := utils.IfThenElse(int(cursor)-pageSize > 0, int(cursor)-pageSize, 0)
+
 	res = &dto.PostListResponseDTO{
-		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Posts:      overviews,
 	}
 	return
@@ -148,12 +158,12 @@ func (m *PostService) SearchList(postListRequestDTO *dto.PostListRequestDTO) (re
 	)
 	user := postListRequestDTO.User
 	query := postListRequestDTO.Query
-	page := postListRequestDTO.Page
+	cursor := postListRequestDTO.Cursor
 	pageSize := postListRequestDTO.PageSize
 
 	params := url.Values{}
 	params.Add("query", query)
-	params.Add("page", strconv.Itoa(page))
+	params.Add("cursor", cursor)
 	params.Add("page_size", strconv.Itoa(pageSize))
 	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
 
@@ -175,6 +185,7 @@ func (m *PostService) SearchList(postListRequestDTO *dto.PostListRequestDTO) (re
 			ID    uint    `json:"id"`
 			Score float64 `json:"score"`
 		} `json:"posts"`
+		NextCursor string `json:"next_cursor"`
 	}
 
 	err = json.Unmarshal(body, &responseBody)
@@ -187,6 +198,7 @@ func (m *PostService) SearchList(postListRequestDTO *dto.PostListRequestDTO) (re
 	for _, post := range responseBody.Posts {
 		ids = append(ids, post.ID)
 	}
+	nextCursor := responseBody.NextCursor
 
 	// 根据返回的 id 列表获取列表
 	posts, err := m.Dao.GetListsByIDs(ids)
@@ -200,7 +212,7 @@ func (m *PostService) SearchList(postListRequestDTO *dto.PostListRequestDTO) (re
 		return
 	}
 	res = &dto.PostListResponseDTO{
-		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Posts:      overviews,
 	}
 	return

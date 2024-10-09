@@ -48,7 +48,7 @@ type PostCollectRequestDTO struct {
 }
 
 type PostListRequestDTO struct {
-	Page     int // 分页相关在中间件处理
+	Cursor   string
 	PageSize int
 	User     *model.User
 	Query    string `form:"query"`

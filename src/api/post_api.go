@@ -102,14 +102,14 @@ func (m PostApi) Collect(c *gin.Context) {
 
 func (m PostApi) List(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	page := c.MustGet("page").(int)
+	cursor := c.MustGet("cursor").(string)
 	pageSize := c.MustGet("page_size").(int)
 	var postListRequestDTO dto.PostListRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postListRequestDTO}).GetError(); err != nil {
 		return
 	}
 	postListRequestDTO.User = user
-	postListRequestDTO.Page = page
+	postListRequestDTO.Cursor = cursor
 	postListRequestDTO.PageSize = pageSize
 
 	var posts *dto.PostListResponseDTO

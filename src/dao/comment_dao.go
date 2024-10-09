@@ -285,20 +285,21 @@ func (m *CommentDao) Like(user *model.User, comment *model.Comment) error {
 }
 
 // ListFirstLevel 列出某个帖子下一级评论列表
-func (m *CommentDao) ListFirstLevel(postID uint, page, pageSize int) ([]model.Comment, int, error) {
+func (m *CommentDao) ListFirstLevel(postID uint, cursor uint, pageSize int) ([]model.Comment, int, error) {
 	// 计算总数
 	var total int64
 	if err := m.Orm.Model(&model.Comment{}).Where("post_id = ? AND reply_comment_id = ?", postID, 0).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	offset := (page - 1) * pageSize
 	var comments []model.Comment
 	query := m.Orm.Model(&model.Comment{}).
 		Where("post_id = ? AND reply_comment_id = ?", postID, 0).
 		Limit(pageSize).
-		Offset(offset).
 		Order("id desc")
+	if cursor != 0 {
+		query = query.Where("id <= ?", cursor)
+	}
 	if err := query.Find(&comments).Error; err != nil {
 		return nil, 0, err
 	}
@@ -306,20 +307,21 @@ func (m *CommentDao) ListFirstLevel(postID uint, page, pageSize int) ([]model.Co
 }
 
 // ListSecondLevel 列出某个一级评论下二级评论列表
-func (m *CommentDao) ListSecondLevel(commendID uint, page, pageSize int) ([]model.Comment, int, error) {
+func (m *CommentDao) ListSecondLevel(commendID uint, cursor uint, pageSize int) ([]model.Comment, int, error) {
 	// 计算总数
 	var total int64
 	if err := m.Orm.Model(&model.Comment{}).Where("reply_root_comment_id = ? AND reply_comment_id != 0", commendID).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	offset := (page - 1) * pageSize
 	var comments []model.Comment
 	query := m.Orm.Model(&model.Comment{}).
 		Where("reply_root_comment_id = ? AND reply_comment_id != 0", commendID).
 		Limit(pageSize).
-		Offset(offset).
 		Order("id desc")
+	if cursor != 0 {
+		query = query.Where("id <= ?", cursor)
+	}
 	if err := query.Find(&comments).Error; err != nil {
 		return nil, 0, err
 	}

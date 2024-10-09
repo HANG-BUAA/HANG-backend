@@ -45,7 +45,7 @@ type CommentLikeRequestDTO struct {
 }
 
 type CommentListRequestDTO struct {
-	Page      int
+	Cursor    string
 	PageSize  int
 	User      *model.User
 	PostID    uint `json:"post_id" form:"post_id"`

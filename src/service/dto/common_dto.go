@@ -2,16 +2,14 @@ package dto
 
 type PaginationInfo struct {
 	TotalRecords int `json:"total_records"` // 总记录数
-	CurrentPage  int `json:"current_page"`  // 当前页
 	PageSize     int `json:"page_size"`     // 每页条数
-	TotalPages   int `json:"total_pages"`   // 总页数
+	NextCursor   any `json:"next_cursor"`
 }
 
-func BuildPaginationInfo(total, curPage, pageSize int) *PaginationInfo {
+func BuildPaginationInfo(total, pageSize int, nextCursor any) *PaginationInfo {
 	return &PaginationInfo{
 		TotalRecords: total,
-		CurrentPage:  curPage,
 		PageSize:     pageSize,
-		TotalPages:   (total + pageSize - 1) / pageSize,
+		NextCursor:   nextCursor,
 	}
 }

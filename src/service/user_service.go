@@ -152,9 +152,7 @@ func (m *UserService) AdminList(requestDTO *dto.AdminUserListRequestDTO) (respon
 		Users: userOverviews,
 		Pagination: dto.PaginationInfo{
 			TotalRecords: 777777,
-			CurrentPage:  page,
 			PageSize:     pageSize,
-			TotalPages:   7777,
 		},
 	}
 	return

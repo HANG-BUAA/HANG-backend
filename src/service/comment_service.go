@@ -5,7 +5,9 @@ import (
 	"HANG-backend/src/dao"
 	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
+	"HANG-backend/src/utils"
 	"errors"
+	"strconv"
 )
 
 var commentService *CommentService
@@ -75,10 +77,15 @@ func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) 
 
 // ListFirstLevel 列出某帖子下一级评论列表
 func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
-	page := commentListRequestDTO.Page
 	pageSize := commentListRequestDTO.PageSize
 	user := commentListRequestDTO.User
 	postID := commentListRequestDTO.PostID
+
+	tmp, err := strconv.ParseUint(commentListRequestDTO.Cursor, 10, 32)
+	if err != nil {
+		tmp = 0
+	}
+	cursor := uint(tmp)
 
 	// 校验帖子是否存在
 	_, ok := m.Dao.CheckPostExist(postID)
@@ -86,17 +93,21 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 		return nil, errors.New("post not exist")
 	}
 
-	comments, total, err := m.Dao.ListFirstLevel(postID, page, pageSize)
+	comments, total, err := m.Dao.ListFirstLevel(postID, cursor, pageSize)
 	if err != nil {
 		return
+	}
+	if cursor == 0 {
+		cursor = uint(total)
 	}
 	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, user.ID)
 	if err != nil {
 		return
 	}
 
+	nextCursor := utils.IfThenElse(int(cursor)-pageSize > 0, int(cursor)-pageSize, 0)
 	res = &dto.CommentListResponseDTO{
-		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Comments:   overviews,
 	}
 	return
@@ -104,10 +115,15 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 
 // ListSecondLevel 列出某一级评论下二级评论列表
 func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
-	page := commentListRequestDTO.Page
 	pageSize := commentListRequestDTO.PageSize
 	userID := commentListRequestDTO.User.ID
 	commentID := commentListRequestDTO.CommentID
+
+	tmp, err := strconv.ParseUint(commentListRequestDTO.Cursor, 10, 32)
+	if err != nil {
+		tmp = 0
+	}
+	cursor := uint(tmp)
 
 	// 校验一级评论是否存在
 	_, ok := m.Dao.CheckCommentExist(commentID)
@@ -115,17 +131,22 @@ func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListR
 		return nil, errors.New("comment not exist")
 	}
 
-	comments, total, err := m.Dao.ListSecondLevel(commentID, page, pageSize)
+	comments, total, err := m.Dao.ListSecondLevel(commentID, cursor, pageSize)
 	if err != nil {
 		return
+	}
+
+	if cursor == 0 {
+		cursor = uint(total)
 	}
 	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, userID)
 	if err != nil {
 		return
 	}
 
+	nextCursor := utils.IfThenElse(int(cursor)-pageSize > 0, int(cursor)-pageSize, 0)
 	res = &dto.CommentListResponseDTO{
-		Pagination: *dto.BuildPaginationInfo(total, page, pageSize),
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Comments:   overviews,
 	}
 	return

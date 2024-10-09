@@ -75,14 +75,14 @@ func (m CommentApi) Like(c *gin.Context) {
 
 func (m CommentApi) List(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	page := c.MustGet("page").(int)
+	cursor := c.MustGet("cursor").(string)
 	pageSize := c.MustGet("page_size").(int)
 	var commentListRequestDTO dto.CommentListRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentListRequestDTO}).GetError(); err != nil {
 		return
 	}
 	commentListRequestDTO.User = user
-	commentListRequestDTO.Page = page
+	commentListRequestDTO.Cursor = cursor
 	commentListRequestDTO.PageSize = pageSize
 
 	// 根据 level 选择服务

@@ -134,7 +134,7 @@ func (m *PostDao) Collect(user *model.User, post *model.Post) error {
 	})
 }
 
-func (m *PostDao) CommonList(page int, pageSize int) ([]model.Post, int, error) {
+func (m *PostDao) CommonList(cursor uint, pageSize int) ([]model.Post, int, error) {
 	query := m.Orm.Model(&model.Post{})
 
 	// 先计算总数
@@ -143,12 +143,13 @@ func (m *PostDao) CommonList(page int, pageSize int) ([]model.Post, int, error) 
 		return nil, 0, err
 	}
 
-	offset := (page - 1) * pageSize
 	var posts []model.Post
 	query = query.
 		Limit(pageSize).
-		Offset(offset).
 		Order("id desc")
+	if cursor != 0 {
+		query = query.Where("id <= ?", cursor)
+	}
 	if err := query.Find(&posts).Error; err != nil {
 		return nil, 0, err
 	}
