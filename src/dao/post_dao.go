@@ -6,6 +6,7 @@ import (
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
 	"gorm.io/gorm"
+	"time"
 )
 
 var postDao *PostDao
@@ -192,4 +193,42 @@ func (m *PostDao) getPostUserNameAndAvatar(post *model.Post) (string, string, er
 		return "", "", err
 	}
 	return user.Username, user.Avatar, nil
+}
+
+func (m *PostDao) GetCollections(user *model.User, cursor time.Time, pageSize int) ([]model.Post, int, bool, error) {
+	// 基础查询：获取用户收藏的 Post，按 created_at 排序
+	query := m.Orm.
+		Model(&model.Post{}).
+		Joins("JOIN post_collect ON post_collect.post_id = post.id").
+		Where("post_collect.user_id = ?", user.ID).
+		Order("post_collect.created_at desc")
+
+	// 先计算总数
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, false, err
+	}
+
+	// 添加分页和 cursor 条件
+	if !cursor.IsZero() {
+		query = query.Where("post_collect.created_at < ?", cursor)
+	}
+
+	// 多查一条出来，为了判断当前是否到达了最后一页
+	var posts []model.Post
+	if err := query.Limit(pageSize + 1).Find(&posts).Error; err != nil {
+		return nil, 0, false, err
+	}
+
+	isEnd := len(posts) < pageSize+1
+
+	return posts[:utils.IfThenElse(isEnd, len(posts), pageSize).(int)], int(total), isEnd, nil
+}
+
+func (m *PostDao) GetCollectCursor(user *model.User, post *model.Post) (time.Time, error) {
+	var postCollect model.PostCollect
+	if err := m.Orm.Where("user_id = ? AND post_id = ?", user.ID, post.ID).First(&postCollect).Error; err != nil {
+		return time.Time{}, err
+	}
+	return postCollect.CreatedAt, nil
 }

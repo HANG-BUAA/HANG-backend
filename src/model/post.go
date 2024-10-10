@@ -21,11 +21,13 @@ type Post struct {
 }
 
 type PostLike struct {
-	UserID uint `gorm:"primaryKey;index"`
-	PostID uint `gorm:"primaryKey;index"`
+	UserID    uint      `gorm:"primaryKey;index"`
+	PostID    uint      `gorm:"primaryKey;index"`
+	CreatedAt time.Time `gorm:"index"`
 }
 
 type PostCollect struct {
-	UserID uint `gorm:"primaryKey;index"`
-	PostID uint `gorm:"primaryKey;index"`
+	UserID    uint      `gorm:"primaryKey;index"`
+	PostID    uint      `gorm:"primaryKey;index"`
+	CreatedAt time.Time `gorm:"index"`
 }

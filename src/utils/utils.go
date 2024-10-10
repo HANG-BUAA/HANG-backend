@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func AppendError(existErr, newErr error) error {
@@ -61,4 +62,27 @@ func UploadFile(file *multipart.FileHeader, dst string) (string, error) {
 		return "", fmt.Errorf("failed to write file: %v", err)
 	}
 	return savePath, nil
+}
+
+// ParseTimeWithMultipleFormats 尝试使用多个格式解析时间字符串
+func ParseTimeWithMultipleFormats(timeStr string) (time.Time, error) {
+	formats := []string{
+		"2006-01-02T15:04:05.000-07:00", // 带三位毫秒和时区
+		"2006-01-02T15:04:05.99-07:00",  // 带两位毫秒和时区
+		"2006-01-02T15:04:05-07:00",     // 无毫秒带时区
+		"2006-01-02T15:04:05Z07:00",     // 带时区（UTC 标准格式）
+		"2006-01-02 15:04:05",           // 无时区和毫秒的格式
+	}
+
+	var t time.Time
+	var err error
+	for _, format := range formats {
+		t, err = time.Parse(format, timeStr)
+		if err == nil {
+			return t, nil
+		}
+	}
+
+	// 如果所有格式都无法解析，返回最后一个错误
+	return time.Time{}, fmt.Errorf("unable to parse time: %v", err)
 }

@@ -133,3 +133,28 @@ func (m PostApi) List(c *gin.Context) {
 		Data: *posts,
 	})
 }
+
+func (m PostApi) CollectionList(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	cursor := c.MustGet("cursor").(string)
+	pageSize := c.MustGet("page_size").(int)
+	var postCollectionListRequestDTO dto.PostCollectionListRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postCollectionListRequestDTO}).GetError(); err != nil {
+		return
+	}
+	postCollectionListRequestDTO.User = user
+	postCollectionListRequestDTO.Cursor = cursor
+	postCollectionListRequestDTO.PageSize = pageSize
+
+	posts, err := m.Service.CollectionList(&postCollectionListRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_POST_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *posts,
+	})
+}

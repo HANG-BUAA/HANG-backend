@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 var postService *PostService
@@ -218,37 +219,32 @@ func (m *PostService) SearchList(postListRequestDTO *dto.PostListRequestDTO) (re
 	return
 }
 
-//func searchPostsByQuery(query string) ([]uint, error) {
-//	baseURL := fmt.Sprintf("http://%s:%s/post",
-//		viper.GetString("search_client.host"),
-//		viper.GetString("search_client.port"),
-//	)
-//	params := url.Values{}
-//	params.Add("query", query)
-//	fullURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
-//	resp, err := http.Get(fullURL)
-//	if err != nil {
-//		return []uint{}, err
-//	}
-//	defer resp.Body.Close()
-//	body, err := io.ReadAll(resp.Body)
-//	if err != nil {
-//		return []uint{}, err
-//	}
-//
-//	// 解析响应数据
-//	var items []map[string]interface{}
-//	err = json.Unmarshal(body, &items)
-//	if err != nil {
-//		return []uint{}, err
-//	}
-//
-//	// 提取所有id
-//	var ids []uint
-//	for _, item := range items {
-//		if id, ok := item["id"].(float64); ok { // JSON数字解析为float64
-//			ids = append(ids, uint(id))
-//		}
-//	}
-//	return ids, nil
-//}
+func (m *PostService) CollectionList(postCollectionListRequestDTO *dto.PostCollectionListRequestDTO) (res *dto.PostCollectionListResponseDTO, err error) {
+	pageSize := postCollectionListRequestDTO.PageSize
+	user := postCollectionListRequestDTO.User
+	tmp, err := utils.ParseTimeWithMultipleFormats(postCollectionListRequestDTO.Cursor)
+	if err != nil {
+		tmp = time.Time{}
+	}
+	cursor := tmp
+
+	posts, total, isEnd, err := m.Dao.GetCollections(user, cursor, pageSize)
+	if err != nil {
+		return
+	}
+	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, user.ID)
+	if err != nil {
+		return
+	}
+
+	// 构建 nextCursor
+	nextCursor := time.Time{}
+	if !isEnd {
+		nextCursor, err = m.Dao.GetCollectCursor(user, &posts[len(posts)-1])
+	}
+	res = &dto.PostCollectionListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
+		Posts:      overviews,
+	}
+	return
+}
