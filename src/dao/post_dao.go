@@ -135,26 +135,29 @@ func (m *PostDao) Collect(user *model.User, post *model.Post) error {
 	})
 }
 
-func (m *PostDao) CommonList(cursor uint, pageSize int) ([]model.Post, int, error) {
+func (m *PostDao) CommonList(cursor uint, pageSize int) ([]model.Post, int, bool, error) {
 	query := m.Orm.Model(&model.Post{})
 
 	// 先计算总数
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, false, err
 	}
 
+	// 多查一条记录出来，判断是否到有下一页
 	var posts []model.Post
 	query = query.
-		Limit(pageSize).
+		Limit(pageSize + 1).
 		Order("id desc")
 	if cursor != 0 {
-		query = query.Where("id <= ?", cursor)
+		query = query.Where("id < ?", cursor)
 	}
 	if err := query.Find(&posts).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, false, err
 	}
-	return posts, int(total), nil
+
+	isEnd := len(posts) < pageSize+1
+	return posts[:utils.IfThenElse(isEnd, len(posts), pageSize).(int)], int(total), isEnd, nil
 }
 
 // CheckLiked 判断用户是否已经喜欢该帖子
@@ -225,7 +228,7 @@ func (m *PostDao) GetCollections(user *model.User, cursor time.Time, pageSize in
 	return posts[:utils.IfThenElse(isEnd, len(posts), pageSize).(int)], int(total), isEnd, nil
 }
 
-func (m *PostDao) GetCollectCursor(user *model.User, post *model.Post) (time.Time, error) {
+func (m *PostDao) GetCollectCursorByID(user *model.User, post *model.Post) (time.Time, error) {
 	var postCollect model.PostCollect
 	if err := m.Orm.Where("user_id = ? AND post_id = ?", user.ID, post.ID).First(&postCollect).Error; err != nil {
 		return time.Time{}, err

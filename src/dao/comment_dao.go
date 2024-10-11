@@ -285,47 +285,53 @@ func (m *CommentDao) Like(user *model.User, comment *model.Comment) error {
 }
 
 // ListFirstLevel 列出某个帖子下一级评论列表
-func (m *CommentDao) ListFirstLevel(postID uint, cursor uint, pageSize int) ([]model.Comment, int, error) {
+func (m *CommentDao) ListFirstLevel(postID uint, cursor uint, pageSize int) ([]model.Comment, int, bool, error) {
 	// 计算总数
 	var total int64
 	if err := m.Orm.Model(&model.Comment{}).Where("post_id = ? AND reply_comment_id = ?", postID, 0).Count(&total).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, false, err
 	}
 
+	// 多查一条，判断是否到了最后一页
 	var comments []model.Comment
 	query := m.Orm.Model(&model.Comment{}).
 		Where("post_id = ? AND reply_comment_id = ?", postID, 0).
-		Limit(pageSize).
+		Limit(pageSize + 1).
 		Order("id desc")
 	if cursor != 0 {
-		query = query.Where("id <= ?", cursor)
+		query = query.Where("id < ?", cursor)
 	}
 	if err := query.Find(&comments).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, false, err
 	}
-	return comments, int(total), nil
+
+	isEnd := len(comments) < pageSize+1
+	return comments[:utils.IfThenElse(isEnd, len(comments), pageSize).(int)], int(total), isEnd, nil
 }
 
 // ListSecondLevel 列出某个一级评论下二级评论列表
-func (m *CommentDao) ListSecondLevel(commendID uint, cursor uint, pageSize int) ([]model.Comment, int, error) {
+func (m *CommentDao) ListSecondLevel(commendID uint, cursor uint, pageSize int) ([]model.Comment, int, bool, error) {
 	// 计算总数
 	var total int64
 	if err := m.Orm.Model(&model.Comment{}).Where("reply_root_comment_id = ? AND reply_comment_id != 0", commendID).Count(&total).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, false, err
 	}
 
+	// 同理，多查一条出来
 	var comments []model.Comment
 	query := m.Orm.Model(&model.Comment{}).
 		Where("reply_root_comment_id = ? AND reply_comment_id != 0", commendID).
-		Limit(pageSize).
+		Limit(pageSize + 1).
 		Order("id desc")
 	if cursor != 0 {
-		query = query.Where("id <= ?", cursor)
+		query = query.Where("id < ?", cursor)
 	}
 	if err := query.Find(&comments).Error; err != nil {
-		return nil, 0, err
+		return nil, 0, false, err
 	}
-	return comments, int(total), nil
+
+	isEnd := len(comments) < pageSize+1
+	return comments[:utils.IfThenElse(isEnd, len(comments), pageSize).(int)], int(total), isEnd, nil
 }
 
 // CheckCommentExist 检测评论是否存在

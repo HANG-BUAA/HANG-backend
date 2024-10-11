@@ -124,25 +124,21 @@ func (m *PostService) CommonList(postListRequestDTO *dto.PostListRequestDTO) (re
 	pageSize := postListRequestDTO.PageSize
 	user := postListRequestDTO.User
 
-	tmp, err := strconv.ParseUint(postListRequestDTO.Cursor, 10, 32)
+	cursor, err := strconv.ParseUint(postListRequestDTO.Cursor, 10, 32)
 	if err != nil {
-		tmp = 0
+		cursor = 0
 	}
-	cursor := uint(tmp)
 
 	// todo 如果要做个性化推荐的话，后面这里要考虑把 user_id 传入，在 CommonList 服务里使用
-	posts, total, err := m.Dao.CommonList(cursor, pageSize)
+	posts, total, isEnd, err := m.Dao.CommonList(uint(cursor), pageSize)
 	if err != nil {
 		return
-	}
-	if cursor == 0 {
-		cursor = uint(total)
 	}
 	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, user.ID)
 	if err != nil {
 		return
 	}
-	nextCursor := utils.IfThenElse(int(cursor)-pageSize > 0, int(cursor)-pageSize, 0)
+	nextCursor := utils.IfThenElse(isEnd, 0, posts[len(posts)-1].ID)
 
 	res = &dto.PostListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
@@ -240,7 +236,10 @@ func (m *PostService) CollectionList(postCollectionListRequestDTO *dto.PostColle
 	// 构建 nextCursor
 	nextCursor := time.Time{}
 	if !isEnd {
-		nextCursor, err = m.Dao.GetCollectCursor(user, &posts[len(posts)-1])
+		nextCursor, err = m.Dao.GetCollectCursorByID(user, &posts[len(posts)-1])
+		if err != nil {
+			return
+		}
 	}
 	res = &dto.PostCollectionListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),

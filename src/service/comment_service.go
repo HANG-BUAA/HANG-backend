@@ -81,11 +81,10 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 	user := commentListRequestDTO.User
 	postID := commentListRequestDTO.PostID
 
-	tmp, err := strconv.ParseUint(commentListRequestDTO.Cursor, 10, 32)
+	cursor, err := strconv.ParseUint(commentListRequestDTO.Cursor, 10, 32)
 	if err != nil {
-		tmp = 0
+		cursor = 0
 	}
-	cursor := uint(tmp)
 
 	// 校验帖子是否存在
 	_, ok := m.Dao.CheckPostExist(postID)
@@ -93,19 +92,17 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 		return nil, errors.New("post not exist")
 	}
 
-	comments, total, err := m.Dao.ListFirstLevel(postID, cursor, pageSize)
+	comments, total, isEnd, err := m.Dao.ListFirstLevel(postID, uint(cursor), pageSize)
 	if err != nil {
 		return
 	}
-	if cursor == 0 {
-		cursor = uint(total)
-	}
+
 	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, user.ID)
 	if err != nil {
 		return
 	}
 
-	nextCursor := utils.IfThenElse(int(cursor)-pageSize > 0, int(cursor)-pageSize, 0)
+	nextCursor := utils.IfThenElse(isEnd, 0, comments[len(comments)-1].ID)
 	res = &dto.CommentListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Comments:   overviews,
@@ -119,11 +116,10 @@ func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListR
 	userID := commentListRequestDTO.User.ID
 	commentID := commentListRequestDTO.CommentID
 
-	tmp, err := strconv.ParseUint(commentListRequestDTO.Cursor, 10, 32)
+	cursor, err := strconv.ParseUint(commentListRequestDTO.Cursor, 10, 32)
 	if err != nil {
-		tmp = 0
+		cursor = 0
 	}
-	cursor := uint(tmp)
 
 	// 校验一级评论是否存在
 	_, ok := m.Dao.CheckCommentExist(commentID)
@@ -131,20 +127,17 @@ func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListR
 		return nil, errors.New("comment not exist")
 	}
 
-	comments, total, err := m.Dao.ListSecondLevel(commentID, cursor, pageSize)
+	comments, total, isEnd, err := m.Dao.ListSecondLevel(commentID, uint(cursor), pageSize)
 	if err != nil {
 		return
 	}
 
-	if cursor == 0 {
-		cursor = uint(total)
-	}
 	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, userID)
 	if err != nil {
 		return
 	}
 
-	nextCursor := utils.IfThenElse(int(cursor)-pageSize > 0, int(cursor)-pageSize, 0)
+	nextCursor := utils.IfThenElse(isEnd, 0, comments[len(comments)-1].ID)
 	res = &dto.CommentListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Comments:   overviews,
