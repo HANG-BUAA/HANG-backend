@@ -55,9 +55,9 @@ func (m *PostService) Create(postCreateDTO *dto.PostCreateRequestDTO) (res *dto.
 	// 创建协程，异步地将数据传输到 rabbitmq中，进而同步到 es 里
 	go func() {
 		err := utils.PublishPostMessage(utils.PostMessage{
-			post.ID,
-			post.Title,
-			post.Content,
+			ID:      post.ID,
+			Title:   post.Title,
+			Content: post.Content,
 		})
 		if err != nil {
 			// todo 此处对于丢失的数据只写到了 logger 里，后期考虑更靠谱的方案

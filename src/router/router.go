@@ -38,8 +38,9 @@ func InitRouter() {
 	defer cancelCtx()
 
 	r := gin.Default()
-	r.Use(middleware.Cors())    // 挂载跨域中间件
-	pingApi := api.NewPingApi() // 测试连通接口
+	r.Use(middleware.Cors())            // 挂载跨域中间件
+	r.Use(middleware.AccessLogRecord()) // 访问日志中间件
+	pingApi := api.NewPingApi()         // 测试连通接口
 	r.GET("/ping", pingApi.Ping)
 
 	// 公共路由组、用户鉴权路由组，以及管理端路由组

@@ -35,7 +35,7 @@ func getEncoder() zapcore.Encoder {
 func getWriteSyncer() zapcore.WriteSyncer {
 	stSeparator := string(filepath.Separator)
 	stRootDir, _ := os.Getwd()
-	stLogFilePath := stRootDir + stSeparator + "log" + stSeparator + time.Now().Format(time.DateOnly) + ".log"
+	stLogFilePath := stRootDir + stSeparator + "sys_log" + stSeparator + time.Now().Format(time.DateOnly) + ".log"
 	fmt.Println(stLogFilePath)
 
 	lumberjackLogger := &lumberjack.Logger{

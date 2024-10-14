@@ -25,6 +25,6 @@ go.work.sum
 .env
 
 .idea/
-/src/log/
+/src/sys_log/
 /src/config/settings.yaml
 /src/images/

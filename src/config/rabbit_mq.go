@@ -29,12 +29,25 @@ func InitRabbitMq() (*amqp.Channel, error) {
 		true,
 		false,
 		false,
-		false, // 生产环境下防止数据丢失，要等待服务器确认
+		false, // todo 生产环境下防止数据丢失，要等待服务器确认
 		nil,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	// 声明 log 交换机
+	err = ch.ExchangeDeclare(
+		"log",
+		"direct",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return ch, nil
 }
