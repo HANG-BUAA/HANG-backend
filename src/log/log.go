@@ -25,18 +25,18 @@ const (
 )
 
 var levelToStringMap = map[Level]string{
-	DEBUG_LEVEL:  "debug",
-	INFO_LEVEL:   "info",
-	WARNING_LEVEL: "warning",
-	ERROR_LEVEL:  "error",
+	DEBUG_LEVEL:    "debug",
+	INFO_LEVEL:     "info",
+	WARNING_LEVEL:  "warning",
+	ERROR_LEVEL:    "error",
 	CRITICAL_LEVEL: "critical",
 }
 
 type BaseLog struct {
-	Type  Type  `json:"type"`
-	Level Level `json:"level"`
-	Source int     `json:"source"`
-	Timestamp int64    `json:"timestamp"`
+	Type      Type  `json:"type"`
+	Level     Level `json:"level"`
+	Source    int   `json:"source"`
+	Timestamp int64 `json:"timestamp"`
 }
 
 type AccessLog struct {
@@ -50,7 +50,7 @@ type AccessLog struct {
 	} `json:"request"`
 	Response struct {
 		StatusCode int `json:"status_code"`
-	}
+	} `json:"response"`
 	User struct {
 		ID   uint `json:"user_id,omitempty"`
 		Role uint `json:"role,omitempty"`
@@ -82,4 +82,3 @@ func PublishLog(level Level, log any) {
 		}
 	}()
 }
-
