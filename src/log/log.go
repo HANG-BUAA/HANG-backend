@@ -2,8 +2,10 @@ package log
 
 import (
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
 	"encoding/json"
 	"github.com/streadway/amqp"
+	"time"
 )
 
 type Level int
@@ -59,7 +61,16 @@ type AccessLog struct {
 	RequestID     string `json:"request_id"`     // 请求唯一标识
 }
 
-func PublishLog(level Level, log any) {
+type ApplicationLog struct {
+	BaseLog
+	Operation      string `json:"operation"`
+	Message        string `json:"message"`
+	UserID         uint   `json:"user_id"`
+	Duration       int64  `json:"duration"`
+	AdditionalInfo string `json:"additional_info"`
+}
+
+func publishLog(level Level, log any) {
 	go func() {
 		body, err := json.Marshal(log)
 		if err != nil {
@@ -81,4 +92,47 @@ func PublishLog(level Level, log any) {
 			// todo
 		}
 	}()
+}
+
+func PublishAccessLog(
+	duration time.Duration,
+	method string,
+	url string,
+	headers map[string]string,
+	clientIP string,
+	queryParams map[string]string,
+	statusCode int,
+	user *model.User,
+) {
+	accessLog := AccessLog{
+		BaseLog: BaseLog{
+			Type:      ACCESS_TYPE,
+			Level:     INFO_LEVEL,
+			Source:    1, // 主后端
+			Timestamp: time.Now().Unix(),
+		},
+		Request: struct {
+			Method      string            `json:"method"`
+			URL         string            `json:"url"`
+			Headers     map[string]string `json:"headers"`
+			ClientIP    string            `json:"client_ip"`
+			QueryParams map[string]string `json:"query_params"`
+		}{Method: method, URL: url, Headers: headers, ClientIP: clientIP, QueryParams: queryParams},
+		Response: struct {
+			StatusCode int `json:"status_code"`
+		}{StatusCode: statusCode},
+		ExecutionTime: duration.Milliseconds(),
+		RequestID:     "123", // todo 增加请求号
+	}
+
+	if user != nil {
+		accessLog.User.ID = user.ID
+		accessLog.User.Role = user.Role
+	}
+
+	publishLog(DEBUG_LEVEL, accessLog)
+}
+
+func PublishApplicationLog() {
+	// todo
 }
