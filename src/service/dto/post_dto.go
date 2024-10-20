@@ -69,3 +69,12 @@ type PostCollectionListResponseDTO struct {
 	Pagination PaginationInfo    `json:"pagination"`
 	Posts      []PostOverviewDTO `json:"posts"`
 }
+
+type PostRetrieveRequestDTO struct {
+	User *model.User
+	Post *model.Post
+}
+
+type PostRetrieveResponseDTO struct {
+	Post PostOverviewDTO `json:"post"`
+}

@@ -158,3 +158,26 @@ func (m PostApi) CollectionList(c *gin.Context) {
 		Data: *posts,
 	})
 }
+
+func (m PostApi) Retrieve(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	post := c.MustGet("post").(*model.Post)
+	var postRetrieveRequestDTO dto.PostRetrieveRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postRetrieveRequestDTO}).GetError(); err != nil {
+		return
+	}
+	postRetrieveRequestDTO.User = user
+	postRetrieveRequestDTO.Post = post
+
+	postOverview, err := m.Service.Retrieve(&postRetrieveRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_POST_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *postOverview,
+	})
+}

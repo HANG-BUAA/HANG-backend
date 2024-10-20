@@ -247,3 +247,17 @@ func (m *PostService) CollectionList(postCollectionListRequestDTO *dto.PostColle
 	}
 	return
 }
+
+func (m *PostService) Retrieve(postRetrieveRequestDTO *dto.PostRetrieveRequestDTO) (res *dto.PostRetrieveResponseDTO, err error) {
+	user := postRetrieveRequestDTO.User
+	post := postRetrieveRequestDTO.Post
+
+	overview, err := m.Dao.ConvertPostModelToOverviewDTO(post, user.ID)
+	if err != nil {
+		return
+	}
+	res = &dto.PostRetrieveResponseDTO{
+		Post: *overview,
+	}
+	return
+}
