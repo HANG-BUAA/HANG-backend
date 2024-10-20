@@ -97,6 +97,13 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 		return
 	}
 
+	if len(comments) == 0 {
+		res = &dto.CommentListResponseDTO{
+			Comments: []dto.CommentOverviewDTO{},
+		}
+		return
+	}
+
 	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, user.ID)
 	if err != nil {
 		return
@@ -134,6 +141,13 @@ func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListR
 
 	overviews, err := m.Dao.ConvertCommentModelsToOverviewDTOs(comments, userID)
 	if err != nil {
+		return
+	}
+
+	if len(comments) == 0 {
+		res = &dto.CommentListResponseDTO{
+			Comments: []dto.CommentOverviewDTO{},
+		}
 		return
 	}
 

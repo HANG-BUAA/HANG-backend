@@ -134,6 +134,12 @@ func (m *PostService) CommonList(postListRequestDTO *dto.PostListRequestDTO) (re
 	if err != nil {
 		return
 	}
+	if len(posts) == 0 {
+		res = &dto.PostListResponseDTO{
+			Posts: []dto.PostOverviewDTO{},
+		}
+		return
+	}
 	overviews, err := m.Dao.ConvertPostModelsToOverviewDTOs(posts, user.ID)
 	if err != nil {
 		return
