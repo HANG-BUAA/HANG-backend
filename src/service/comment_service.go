@@ -75,6 +75,26 @@ func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) 
 	return custom_error.NewOptimisticLockError()
 }
 
+func (m *CommentService) Unlike(commentUnlikeRequestDTO *dto.CommentUnlikeRequestDTO) (err error) {
+	user := commentUnlikeRequestDTO.User
+	comment := commentUnlikeRequestDTO.Comment
+
+	if !m.Dao.CheckLiked(user, comment) {
+		return errors.New("unliked comment")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Unlike(user, comment)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
 // ListFirstLevel 列出某帖子下一级评论列表
 func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRequestDTO) (res *dto.CommentListResponseDTO, err error) {
 	pageSize := commentListRequestDTO.PageSize

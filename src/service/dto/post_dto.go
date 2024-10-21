@@ -47,6 +47,16 @@ type PostCollectRequestDTO struct {
 	User *model.User
 }
 
+type PostUnlikeRequestDTO struct {
+	Post *model.Post
+	User *model.User
+}
+
+type PostUncollectRequestDTO struct {
+	Post *model.Post
+	User *model.User
+}
+
 type PostListRequestDTO struct {
 	Cursor   string
 	PageSize int

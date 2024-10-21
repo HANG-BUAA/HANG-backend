@@ -111,6 +111,21 @@ func (m *PostDao) Like(user *model.User, post *model.Post) error {
 	})
 }
 
+func (m *PostDao) Unlike(user *model.User, post *model.Post) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		tx.Where("user_id = ? AND post_id = ?", user.ID, post.ID).Delete(&model.PostLike{})
+
+		result := tx.Model(&model.Post{}).Where("id = ? AND like_version = ?", post.ID, post.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     post.LikeNum - 1,
+			"like_version": post.LikeVersion + 1,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
+}
+
 // Collect 用户收藏帖子
 func (m *PostDao) Collect(user *model.User, post *model.Post) error {
 	// 使用事务保证操作原子性
@@ -126,6 +141,21 @@ func (m *PostDao) Collect(user *model.User, post *model.Post) error {
 		// 动态维护 Post 表中的收藏数字段，使用乐观锁防止并发状态下数据不一致的情况
 		result := tx.Model(&model.Post{}).Where("id = ? AND collect_version = ?", post.ID, post.CollectVersion).Updates(map[string]interface{}{
 			"collect_num":     post.CollectNum + 1,
+			"collect_version": post.CollectVersion + 1,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
+}
+
+func (m *PostDao) Uncollect(user *model.User, post *model.Post) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		tx.Where("user_id = ? AND post_id = ?", user.ID, post.ID).Delete(&model.PostCollect{})
+
+		result := tx.Model(&model.Post{}).Where("id = ? AND collect_version = ?", post.ID, post.CollectVersion).Updates(map[string]interface{}{
+			"collect_num":     post.CollectNum - 1,
 			"collect_version": post.CollectVersion + 1,
 		})
 		if result.RowsAffected == 0 {

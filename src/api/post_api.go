@@ -74,6 +74,31 @@ func (m PostApi) Like(c *gin.Context) {
 	})
 }
 
+func (m PostApi) Unlike(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	post := c.MustGet("post").(*model.Post)
+	var postUnlikeRequestDTO dto.PostUnlikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postUnlikeRequestDTO}).GetError(); err != nil {
+		return
+	}
+	postUnlikeRequestDTO.User = user
+	postUnlikeRequestDTO.Post = post
+
+	err := m.Service.Unlike(&postUnlikeRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_POST_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "unlike success",
+		},
+	})
+}
+
 // Collect 收藏帖子
 func (m PostApi) Collect(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
@@ -96,6 +121,31 @@ func (m PostApi) Collect(c *gin.Context) {
 	m.OK(ResponseJson{
 		Data: gin.H{
 			"status": "collect success",
+		},
+	})
+}
+
+func (m PostApi) Uncollect(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	post := c.MustGet("post").(*model.Post)
+	var postUncollectRequestDTO dto.PostUncollectRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postUncollectRequestDTO}).GetError(); err != nil {
+		return
+	}
+	postUncollectRequestDTO.User = user
+	postUncollectRequestDTO.Post = post
+
+	err := m.Service.Uncollect(&postUncollectRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_POST_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "uncollect success",
 		},
 	})
 }

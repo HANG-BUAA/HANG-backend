@@ -93,6 +93,27 @@ func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err erro
 	return custom_error.NewOptimisticLockError()
 }
 
+func (m *PostService) Unlike(postUnlikeRequestDTO *dto.PostUnlikeRequestDTO) (err error) {
+	user := postUnlikeRequestDTO.User
+	post := postUnlikeRequestDTO.Post
+
+	// 判断是否喜欢过该帖子
+	if !m.Dao.CheckLiked(user, post) {
+		return errors.New("unliked post")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Unlike(user, post)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
 // Collect 收藏帖子
 func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) (err error) {
 	user := postCollectRequestDTO.User
@@ -115,6 +136,26 @@ func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) 
 			continue
 		}
 		return
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
+func (m *PostService) Uncollect(postUncollectRequestDTO *dto.PostUncollectRequestDTO) (err error) {
+	user := postUncollectRequestDTO.User
+	post := postUncollectRequestDTO.Post
+
+	if !m.Dao.CheckCollected(user, post) {
+		return errors.New("uncollected post")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.Uncollect(user, post)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
 	}
 	return custom_error.NewOptimisticLockError()
 }

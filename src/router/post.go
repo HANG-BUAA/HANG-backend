@@ -17,8 +17,10 @@ func InitPostRoutes() {
 		{
 			rgAuthPost.POST("", middleware.Permission(permission.PostPost), postApi.Create)
 			rgAuthPost.POST("/:post_id/like", middleware.PostExistence(middleware.URI), postApi.Like)
-			rgAuthPost.GET("/:post_id", middleware.PostExistence(middleware.URI), postApi.Retrieve)
+			rgAuthPost.POST("/:post_id/unlike", middleware.PostExistence(middleware.URI), postApi.Unlike)
 			rgAuthPost.POST("/:post_id/collect", middleware.PostExistence(middleware.URI), postApi.Collect)
+			rgAuthPost.POST(":post_id/uncollect", middleware.PostExistence(middleware.URI), postApi.Uncollect)
+			rgAuthPost.GET("/:post_id", middleware.PostExistence(middleware.URI), postApi.Retrieve)
 			rgAuthPost.GET("", middleware.CheckPaginationParams(), postApi.List)
 			rgAuthPost.GET("/collections", middleware.CheckPaginationParams(), postApi.CollectionList)
 		}

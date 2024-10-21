@@ -73,6 +73,31 @@ func (m CommentApi) Like(c *gin.Context) {
 	})
 }
 
+func (m CommentApi) Unlike(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	comment := c.MustGet("comment").(*model.Comment)
+	var commentUnlikeRequestDTO dto.CommentUnlikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentUnlikeRequestDTO}).GetError(); err != nil {
+		return
+	}
+	commentUnlikeRequestDTO.User = user
+	commentUnlikeRequestDTO.Comment = comment
+
+	err := m.Service.Unlike(&commentUnlikeRequestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Code: global.ERR_CODE_COMMENT_FAILED,
+			Msg:  err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "unlike success",
+		},
+	})
+}
+
 func (m CommentApi) List(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	cursor := c.MustGet("cursor").(string)

@@ -284,6 +284,21 @@ func (m *CommentDao) Like(user *model.User, comment *model.Comment) error {
 	})
 }
 
+func (m *CommentDao) Unlike(user *model.User, comment *model.Comment) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		tx.Where("user_id = ? AND comment_id = ?", user.ID, comment.ID).Delete(&model.CommentLike{})
+
+		result := tx.Model(&model.Comment{}).Where("id = ? AND like_version = ?", comment.ID, comment.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     comment.LikeNum - 1,
+			"like_version": comment.LikeVersion + 1,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
+}
+
 // ListFirstLevel 列出某个帖子下一级评论列表
 func (m *CommentDao) ListFirstLevel(postID uint, cursor uint, pageSize int) ([]model.Comment, int, bool, error) {
 	// 计算总数

@@ -44,6 +44,11 @@ type CommentLikeRequestDTO struct {
 	User    *model.User
 }
 
+type CommentUnlikeRequestDTO struct {
+	Comment *model.Comment
+	User    *model.User
+}
+
 type CommentListRequestDTO struct {
 	Cursor    string
 	PageSize  int

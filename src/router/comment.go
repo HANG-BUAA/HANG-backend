@@ -17,6 +17,7 @@ func InitCommentRoutes() {
 		{
 			rgAuthComment.POST("", middleware.Permission(permission.PostComment), commentApi.Create)
 			rgAuthComment.POST("/:comment_id/like", middleware.CommentExistence(middleware.URI), commentApi.Like)
+			rgAuthComment.POST("/:comment_id/unlike", middleware.CommentExistence(middleware.URI), commentApi.Unlike)
 			rgAuthComment.GET("", middleware.CheckPaginationParams(), commentApi.List)
 		}
 	})
