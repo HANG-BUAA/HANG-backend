@@ -52,6 +52,10 @@ func InitDB() (*gorm.DB, error) {
 		&model.PostCollect{},
 		&model.Comment{},
 		&model.CommentLike{},
+		&model.Tag{},
+		&model.Course{},
+		&model.CourseTag{},
+		&model.CourseReview{},
 	); err != nil {
 		return nil, err
 	}

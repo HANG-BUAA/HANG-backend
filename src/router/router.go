@@ -98,6 +98,7 @@ func initBasePlatformRoutes() {
 	InitUserRoutes()
 	InitPostRoutes()
 	InitCommentRoutes()
+	InitCourseRoutes()
 }
 
 // 自定义校验器
