@@ -82,7 +82,7 @@ func (m *PostDao) CreatePost(user *model.User, title string, content string, isA
 		IsAnonymous: isAnonymous,
 	}
 	if err := m.Orm.Create(&post).Error; err != nil {
-		return &model.Post{}, err
+		return nil, err
 	}
 	return &post, nil
 }

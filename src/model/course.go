@@ -14,18 +14,20 @@ const (
 
 // Course 课程
 type Course struct {
-	ID        string  `gorm:"primaryKey;type:varchar(100);not null;unique;index"`
-	Name      string  `gorm:"type:varchar(100);not null"`
-	Credits   float32 `gorm:"type:decimal(4,2);index"`
-	Campus    int     `gorm:"index"`
+	ID        string   `gorm:"primaryKey;type:varchar(100);not null;unique;index"`
+	Name      string   `gorm:"type:varchar(100);not null"`
+	Credits   *float32 `gorm:"type:decimal(4,2);index"`
+	Campus    *int     `gorm:"index"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt time.Time `gorm:"index"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 func (m *Course) BeforeSave(tx *gorm.DB) error {
-	if m.Campus < 1 || m.Campus > 3 {
-		return errors.New("invalid campus")
+	if m.Campus != nil {
+		if *m.Campus < 1 || *m.Campus > 3 {
+			return errors.New("invalid campus")
+		}
 	}
 	return nil
 }

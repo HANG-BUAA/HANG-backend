@@ -20,6 +20,7 @@ const (
 )
 
 var Roles = []RoleWeight{
+	{}, // 置空一个，为了保持下标对齐，使得可以用 role 当作下标访问具体的角色
 	{User, "普通用户", 1000},
 	{Admin, "管理员", 7000},
 	{SuperAdmin, "超级管理员", 10000},
@@ -39,14 +40,17 @@ const (
 	PostComment                        // 发评论
 	GetUserList                        // 获取用户列表
 	CreateCourse                       // 创建课程
+	CreateTag                          // 创建标签
 )
 
 var Permissions = []PermissionWeight{
+	{}, // 这里置空一个，为了下标对齐，使得可以通过 permission 下标来访问具体的权限
 	{SetRole, "设置角色", 10000},
 	{PostPost, "发帖", 1000},
 	{PostComment, "发评论", 1000},
 	{GetUserList, "获取用户列表", 7000},
 	{CreateCourse, "创建课程", 7000},
+	{CreateTag, "创建标签", 7000},
 }
 
 var userPermissions = []Permission{
@@ -58,6 +62,7 @@ var adminPermissions = []Permission{
 	PostComment,
 	GetUserList,
 	CreateCourse,
+	CreateTag,
 }
 
 var superAdminPermissions = []Permission{
@@ -66,6 +71,7 @@ var superAdminPermissions = []Permission{
 	PostComment,
 	GetUserList,
 	CreateCourse,
+	CreateTag,
 }
 
 var rolePermissionMap = map[Role][]Permission{

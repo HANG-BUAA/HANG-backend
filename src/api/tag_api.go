@@ -6,24 +6,24 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CourseApi struct {
+type TagApi struct {
 	BaseApi
-	Service *service.CourseService
+	Service *service.TagService
 }
 
-func NewCourseApi() CourseApi {
-	return CourseApi{
+func NewTagApi() TagApi {
+	return TagApi{
 		BaseApi: NewBaseApi(),
-		Service: service.NewCourseService(),
+		Service: service.NewTagService(),
 	}
 }
 
-func (m CourseApi) CreateCourse(c *gin.Context) {
-	var requestDTO dto.AdminCourseCreateRequestDTO
+func (m TagApi) AdminCreateTag(c *gin.Context) {
+	var requestDTO dto.AdminTagCreateRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
 		return
 	}
-	responseDTO, err := m.Service.CreateCourse(&requestDTO)
+	responseDTO, err := m.Service.AdminCreate(&requestDTO)
 	if err != nil {
 		m.Fail(ResponseJson{
 			Msg: err.Error(),
