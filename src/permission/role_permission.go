@@ -41,6 +41,7 @@ const (
 	GetUserList                        // 获取用户列表
 	CreateCourse                       // 创建课程
 	CreateTag                          // 创建标签
+	ReviewCourse                       // 评论课程
 )
 
 var Permissions = []PermissionWeight{
@@ -51,10 +52,11 @@ var Permissions = []PermissionWeight{
 	{GetUserList, "获取用户列表", 7000},
 	{CreateCourse, "创建课程", 7000},
 	{CreateTag, "创建标签", 7000},
+	{ReviewCourse, "评论课程", 1000},
 }
 
 var userPermissions = []Permission{
-	PostPost, PostComment,
+	PostPost, PostComment, ReviewCourse,
 }
 
 var adminPermissions = []Permission{
@@ -63,6 +65,7 @@ var adminPermissions = []Permission{
 	GetUserList,
 	CreateCourse,
 	CreateTag,
+	ReviewCourse,
 }
 
 var superAdminPermissions = []Permission{
@@ -72,6 +75,7 @@ var superAdminPermissions = []Permission{
 	GetUserList,
 	CreateCourse,
 	CreateTag,
+	ReviewCourse,
 }
 
 var rolePermissionMap = map[Role][]Permission{

@@ -20,7 +20,7 @@ func NewCourseDao() *CourseDao {
 	return courseDao
 }
 
-func (m *CourseDao) Create(id, name string, credits *float32, campus *int, tags []model.Tag) (*model.Course, error) {
+func (m *CourseDao) CreateCourse(id, name string, credits *float32, campus *int, tags []model.Tag) (*model.Course, error) {
 	course := model.Course{
 		ID:      id,
 		Name:    name,
@@ -52,7 +52,20 @@ func (m *CourseDao) Create(id, name string, credits *float32, campus *int, tags 
 	return &course, err
 }
 
-func (m *CourseDao) CheckTagsExist(tags []uint) ([]model.Tag, error) {
+func (m *CourseDao) CreateCourseReview(courseID string, user *model.User, score int, content string) (*model.CourseReview, error) {
+	courseReview := model.CourseReview{
+		CourseID: courseID,
+		UserID:   user.ID,
+		Content:  content,
+		Score:    score,
+	}
+	if err := m.Orm.Create(&courseReview).Error; err != nil {
+		return nil, err
+	}
+	return &courseReview, nil
+}
+
+func (m *CourseDao) ListTagsByIDs(tags []uint) ([]model.Tag, error) {
 	var result []model.Tag
 	for _, tagID := range tags {
 		var tag model.Tag
@@ -62,4 +75,12 @@ func (m *CourseDao) CheckTagsExist(tags []uint) ([]model.Tag, error) {
 		result = append(result, tag)
 	}
 	return result, nil
+}
+
+func (m *CourseDao) GetCourseByID(id string) (*model.Course, error) {
+	var course model.Course
+	if err := m.Orm.First(&course, model.Course{ID: id}).Error; err != nil {
+		return nil, err
+	}
+	return &course, nil
 }

@@ -29,12 +29,12 @@ func (m *CourseService) CreateCourse(requestDTO *dto.AdminCourseCreateRequestDTO
 	tagIDs := requestDTO.Tags
 
 	// 检查 tags 合法性
-	tags, err := m.Dao.CheckTagsExist(tagIDs)
+	tags, err := m.Dao.ListTagsByIDs(tagIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	course, err := m.Dao.Create(id, name, credits, campus, tags)
+	course, err := m.Dao.CreateCourse(id, name, credits, campus, tags)
 	if err != nil {
 		return
 	}
@@ -47,6 +47,35 @@ func (m *CourseService) CreateCourse(requestDTO *dto.AdminCourseCreateRequestDTO
 		CreatedAt: course.CreatedAt,
 		UpdatedAt: course.UpdatedAt,
 		DeletedAt: course.DeletedAt,
+	}
+	return
+}
+
+func (m *CourseService) CreateCourseReview(requestDTO *dto.CreateCourseReviewRequestDTO) (res *dto.CreateCourseReviewResponseDTO, err error) {
+	user := requestDTO.User
+	courseID := requestDTO.CourseID
+	Content := requestDTO.Content
+	score := requestDTO.Score
+
+	// 检查课程是否存在
+	_, err = m.Dao.GetCourseByID(courseID)
+	if err != nil {
+		return nil, err
+	}
+
+	review, err := m.Dao.CreateCourseReview(courseID, user, score, Content)
+	if err != nil {
+		return
+	}
+	res = &dto.CreateCourseReviewResponseDTO{
+		ID:        review.ID,
+		CourseID:  review.CourseID,
+		Content:   review.Content,
+		Score:     review.Score,
+		IsSelf:    true,
+		CreatedAt: review.CreatedAt,
+		UpdatedAt: review.UpdatedAt,
+		DeletedAt: review.DeletedAt,
 	}
 	return
 }

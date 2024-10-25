@@ -46,5 +46,5 @@ type CourseReview struct {
 	Score     int    `gorm:"type:int;not null;check:score >= 1 and score <= 5"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	DeletedAt time.Time `gorm:"index"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }

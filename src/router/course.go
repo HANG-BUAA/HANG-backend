@@ -13,10 +13,10 @@ func InitCourseRoutes() {
 		{
 
 		}
-		//rgAuthCourse := rgAuth.Group("/courses")
-		//{
-		//
-		//}
+		rgAuthCourse := rgAuth.Group("/courses")
+		{
+			rgAuthCourse.POST("/reviews", middleware.Permission(permission.ReviewCourse), courseApi.CreateCourseReview)
+		}
 		rgAdminCourse := rgAdminGroup.Group("/courses")
 		{
 			rgAdminCourse.POST("", middleware.Permission(permission.CreateCourse), courseApi.CreateCourse)
