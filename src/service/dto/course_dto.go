@@ -12,6 +12,20 @@ type CourseReviewOverviewDTO struct {
 	Content   string         `json:"content"`
 	Score     int            `json:"score"`
 	IsSelf    bool           `json:"is_self"`
+	LikeNum   int            `json:"like_num"`
+	HasLiked  bool           `json:"has_liked"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at"`
+}
+
+type CourseOverviewDTO struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Credits   *float32       `json:"credits"`
+	Campus    *int           `json:"campus"`
+	ReviewNum int            `json:"review_num"`
+	Tags      []model.Tag    `json:"tags"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at"`
@@ -25,16 +39,7 @@ type AdminCourseCreateRequestDTO struct {
 	Tags    []uint   `json:"tags" form:"tags"`
 }
 
-type AdminCourseCreateResponseDTO struct {
-	ID        string         `json:"id"`
-	Name      string         `json:"name"`
-	Credits   *float32       `json:"credits"`
-	Campus    *int           `json:"campus"`
-	Tags      []uint         `json:"tags"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at"`
-}
+type AdminCourseCreateResponseDTO CourseOverviewDTO
 
 type CreateCourseReviewRequestDTO struct {
 	User     *model.User
@@ -44,3 +49,8 @@ type CreateCourseReviewRequestDTO struct {
 }
 
 type CreateCourseReviewResponseDTO CourseReviewOverviewDTO
+
+type LikeCourseReviewRequestDTO struct {
+	User         *model.User
+	CourseReview *model.CourseReview
+}

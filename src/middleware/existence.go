@@ -64,6 +64,7 @@ func PostExistence(location ParamLocation) gin.HandlerFunc {
 		var post model.Post
 		if err := global.RDB.First(&post, postID).Error; err != nil {
 			entityNotFoundErr(c, "post", postID)
+			return
 		}
 		c.Set("post", &post)
 		c.Next()
@@ -95,8 +96,72 @@ func CommentExistence(location ParamLocation) gin.HandlerFunc {
 		var comment model.Comment
 		if err := global.RDB.First(&comment, commentID).Error; err != nil {
 			entityNotFoundErr(c, "comment", commentID)
+			return
 		}
 		c.Set("comment", &comment)
+		c.Next()
+	}
+}
+
+func CourseExistence(location ParamLocation) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var courseID uint
+		if location == URI {
+			uriCourseID := c.Param("course_id")
+			tmp, err := strconv.ParseUint(uriCourseID, 10, 64)
+			if err != nil {
+				paramMissErr(c, location, "course_id")
+				return
+			}
+			courseID = uint(tmp)
+		} else {
+			queryCourseID := c.Query("course_id")
+			tmp, err := strconv.ParseUint(queryCourseID, 10, 64)
+			if err != nil {
+				paramMissErr(c, location, "course_id")
+				return
+			}
+			courseID = uint(tmp)
+		}
+
+		// 判断 course 是否存在
+		var course model.Course
+		if err := global.RDB.First(&course, courseID).Error; err != nil {
+			entityNotFoundErr(c, "course", courseID)
+			return
+		}
+		c.Set("course", &course)
+		c.Next()
+	}
+}
+
+func CourseReviewExistence(location ParamLocation) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var courseReviewID uint
+		if location == URI {
+			uriCourseReviewID := c.Param("review_id")
+			tmp, err := strconv.ParseUint(uriCourseReviewID, 10, 64)
+			if err != nil {
+				paramMissErr(c, location, "course_review_id")
+				return
+			}
+			courseReviewID = uint(tmp)
+		} else {
+			queryCourseReviewID := c.Query("review_id")
+			tmp, err := strconv.ParseUint(queryCourseReviewID, 10, 64)
+			if err != nil {
+				paramMissErr(c, location, "course_review_id")
+				return
+			}
+			courseReviewID = uint(tmp)
+		}
+
+		var courseReview model.CourseReview
+		if err := global.RDB.First(&courseReview, courseReviewID).Error; err != nil {
+			entityNotFoundErr(c, "course_review", courseReviewID)
+			return
+		}
+		c.Set("course_review", &courseReview)
 		c.Next()
 	}
 }

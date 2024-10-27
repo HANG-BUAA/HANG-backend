@@ -15,7 +15,8 @@ func InitCourseRoutes() {
 		}
 		rgAuthCourse := rgAuth.Group("/courses")
 		{
-			rgAuthCourse.POST("/reviews", middleware.Permission(permission.ReviewCourse), courseApi.CreateCourseReview)
+			rgAuthCourse.POST("/reviews", middleware.Permission(permission.ReviewCourse), courseApi.CreateReview)
+			rgAuthCourse.POST("/reviews/:review_id/like", middleware.CourseReviewExistence(middleware.URI), courseApi.LikeReview)
 		}
 		rgAdminCourse := rgAdminGroup.Group("/courses")
 		{

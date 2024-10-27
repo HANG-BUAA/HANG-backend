@@ -48,3 +48,8 @@ type CourseReview struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
+
+type CourseReviewLike struct {
+	CourseReviewID uint `gorm:"primaryKey"`
+	UserID         uint `gorm:"primaryKey"`
+}

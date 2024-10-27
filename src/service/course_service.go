@@ -3,6 +3,7 @@ package service
 import (
 	"HANG-backend/src/dao"
 	"HANG-backend/src/service/dto"
+	"errors"
 )
 
 var courseService *CourseService
@@ -38,20 +39,15 @@ func (m *CourseService) CreateCourse(requestDTO *dto.AdminCourseCreateRequestDTO
 	if err != nil {
 		return
 	}
-	res = &dto.AdminCourseCreateResponseDTO{
-		ID:        course.ID,
-		Name:      course.Name,
-		Credits:   course.Credits,
-		Campus:    course.Campus,
-		Tags:      tagIDs, // todo 返回格式会变化，此处可以直接返回 tags 详细信息
-		CreatedAt: course.CreatedAt,
-		UpdatedAt: course.UpdatedAt,
-		DeletedAt: course.DeletedAt,
+	tmp, err := m.Dao.ConvertCourseModelToOverviewDTO(course)
+	if err != nil {
+		return nil, err
 	}
+	res = (*dto.AdminCourseCreateResponseDTO)(tmp)
 	return
 }
 
-func (m *CourseService) CreateCourseReview(requestDTO *dto.CreateCourseReviewRequestDTO) (res *dto.CreateCourseReviewResponseDTO, err error) {
+func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDTO) (res *dto.CreateCourseReviewResponseDTO, err error) {
 	user := requestDTO.User
 	courseID := requestDTO.CourseID
 	Content := requestDTO.Content
@@ -63,7 +59,7 @@ func (m *CourseService) CreateCourseReview(requestDTO *dto.CreateCourseReviewReq
 		return nil, err
 	}
 
-	review, err := m.Dao.CreateCourseReview(courseID, user, score, Content)
+	review, err := m.Dao.CreateReview(courseID, user, score, Content)
 	if err != nil {
 		return
 	}
@@ -73,9 +69,24 @@ func (m *CourseService) CreateCourseReview(requestDTO *dto.CreateCourseReviewReq
 		Content:   review.Content,
 		Score:     review.Score,
 		IsSelf:    true,
+		LikeNum:   0,
+		HasLiked:  false,
 		CreatedAt: review.CreatedAt,
 		UpdatedAt: review.UpdatedAt,
 		DeletedAt: review.DeletedAt,
 	}
+	return
+}
+
+func (m *CourseService) LikeReview(requestDTO *dto.LikeCourseReviewRequestDTO) (err error) {
+	user := requestDTO.User
+	courseReview := requestDTO.CourseReview
+
+	// 判断用户是否已经喜欢评论
+	if m.Dao.CheckReviewLiked(user, courseReview) {
+		return errors.New("liked review")
+	}
+
+	err = m.Dao.LikeReview(user, courseReview)
 	return
 }

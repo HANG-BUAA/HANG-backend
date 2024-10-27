@@ -56,6 +56,7 @@ func InitDB() (*gorm.DB, error) {
 		&model.Course{},
 		&model.CourseTag{},
 		&model.CourseReview{},
+		&model.CourseReviewLike{},
 	); err != nil {
 		return nil, err
 	}
