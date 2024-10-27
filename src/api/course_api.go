@@ -79,3 +79,50 @@ func (m CourseApi) LikeReview(c *gin.Context) {
 		},
 	})
 }
+
+func (m CourseApi) ListCourse(c *gin.Context) {
+	cursor := c.MustGet("cursor").(string)
+	pageSize := c.MustGet("page_size").(int)
+	var requestDTO dto.CourseListRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+		return
+	}
+	requestDTO.Cursor = cursor
+	requestDTO.PageSize = pageSize
+
+	courses, err := m.Service.ListCourse(&requestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *courses,
+	})
+}
+
+func (m CourseApi) ListReview(c *gin.Context) {
+	cursor := c.MustGet("cursor").(string)
+	pageSize := c.MustGet("page_size").(int)
+	user := c.MustGet("user").(*model.User)
+	var requestDTO dto.CourseReviewListRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+		return
+	}
+	requestDTO.Cursor = cursor
+	requestDTO.PageSize = pageSize
+	requestDTO.User = user
+
+	// todo 搜索服务
+	reviews, err := m.Service.CommonListReview(&requestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *reviews,
+	})
+}

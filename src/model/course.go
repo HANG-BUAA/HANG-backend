@@ -15,7 +15,7 @@ const (
 // Course 课程
 type Course struct {
 	ID        string   `gorm:"primaryKey;type:varchar(100);not null;unique;index"`
-	Name      string   `gorm:"type:varchar(100);not null"`
+	Name      string   `gorm:"type:varchar(100);not null;unique;index"`
 	Credits   *float32 `gorm:"type:decimal(4,2);index"`
 	Campus    *int     `gorm:"index"`
 	CreatedAt time.Time
@@ -39,14 +39,16 @@ type CourseTag struct {
 
 // CourseReview 课程评价
 type CourseReview struct {
-	ID        uint   `gorm:"primaryKey;autoIncrement; not null"`
-	CourseID  string `gorm:"type:varchar(100);index;not null"`
-	UserID    uint   `gorm:"index;not null"`
-	Content   string `gorm:"type:text;not null"`
-	Score     int    `gorm:"type:int;not null;check:score >= 1 and score <= 5"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID          uint   `gorm:"primaryKey;autoIncrement; not null"`
+	CourseID    string `gorm:"type:varchar(100);index;not null"`
+	UserID      uint   `gorm:"index;not null"`
+	Content     string `gorm:"type:text;not null"`
+	Score       int    `gorm:"type:int;not null;check:score >= 1 and score <= 5"`
+	LikeNum     int    `gorm:"default:0;index; not null"`
+	LikeVersion int    `gorm:"default:0;not null"` // 喜欢操作的乐观锁版本号
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
 type CourseReviewLike struct {

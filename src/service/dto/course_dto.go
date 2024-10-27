@@ -54,3 +54,27 @@ type LikeCourseReviewRequestDTO struct {
 	User         *model.User
 	CourseReview *model.CourseReview
 }
+
+type CourseListRequestDTO struct {
+	Cursor   string
+	PageSize int
+	Keyword  string `form:"keyword" json:"keyword"`
+	Tags     []uint `form:"tags" json:"tags"`
+}
+
+type CourseListResponseDTO struct {
+	Pagination PaginationInfo      `json:"pagination"`
+	Courses    []CourseOverviewDTO `json:"courses"`
+}
+
+type CourseReviewListRequestDTO struct {
+	Cursor   string
+	PageSize int
+	User     *model.User
+	CourseID string `json:"course_id" form:"course_id" binding:"required" required_err:"course_id is Required"`
+}
+
+type CourseReviewListResponseDTO struct {
+	Pagination PaginationInfo            `json:"pagination"`
+	Reviews    []CourseReviewOverviewDTO `json:"reviews"`
+}

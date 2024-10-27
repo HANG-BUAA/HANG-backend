@@ -1,9 +1,13 @@
 package service
 
 import (
+	"HANG-backend/src/custom_error"
 	"HANG-backend/src/dao"
+	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
+	"HANG-backend/src/utils"
 	"errors"
+	"fmt"
 )
 
 var courseService *CourseService
@@ -87,6 +91,88 @@ func (m *CourseService) LikeReview(requestDTO *dto.LikeCourseReviewRequestDTO) (
 		return errors.New("liked review")
 	}
 
-	err = m.Dao.LikeReview(user, courseReview)
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.LikeReview(user, courseReview)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
+func (m *CourseService) ListCourse(requestDTO *dto.CourseListRequestDTO) (res *dto.CourseListResponseDTO, err error) {
+	pageSize := requestDTO.PageSize
+	keyword := requestDTO.Keyword
+	tags := requestDTO.Tags
+	cursor := requestDTO.Cursor
+
+	courses, total, isEnd, err := m.Dao.ListCourse(cursor, pageSize, keyword, tags)
+	if err != nil {
+		return
+	}
+	if len(courses) == 0 {
+		res = &dto.CourseListResponseDTO{
+			Courses: []dto.CourseOverviewDTO{},
+		}
+		return
+	}
+
+	overviews, err := m.Dao.ConvertCourseModelsToOverviewDTOs(courses)
+	if err != nil {
+		return
+	}
+	nextCursor := utils.IfThenElse(isEnd, 0, courses[len(courses)-1].ID)
+	res = &dto.CourseListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
+		Courses:    overviews,
+	}
+	return
+}
+
+func (m *CourseService) CommonListReview(requestDTO *dto.CourseReviewListRequestDTO) (res *dto.CourseReviewListResponseDTO, err error) {
+	pageSize := requestDTO.PageSize
+	user := requestDTO.User
+	courseID := requestDTO.CourseID
+
+	// todo 检查课程是否存在
+
+	var cursorLikeNum int
+	var cursorID uint
+	cursor := new(struct {
+		LikeNum int
+		ID      uint
+	})
+	_, err = fmt.Sscanf(requestDTO.Cursor, "%d %d", &cursorLikeNum, &cursorID)
+	if err != nil {
+		cursor = nil
+	} else {
+		cursor.LikeNum = cursorLikeNum
+		cursor.ID = cursorID
+	}
+
+	reviews, total, isEnd, err := m.Dao.CommonListReview(cursor, pageSize, courseID)
+	if err != nil {
+		return
+	}
+	if len(reviews) == 0 {
+		res = &dto.CourseReviewListResponseDTO{
+			Reviews: []dto.CourseReviewOverviewDTO{},
+		}
+		return
+	}
+
+	overviews, err := m.Dao.ConvertReviewModelsToOverviewDTOs(reviews, user)
+	if err != nil {
+		return
+	}
+	nextCursor := utils.IfThenElse(isEnd, nil, fmt.Sprintf("%d %d", reviews[len(reviews)-1].LikeNum, reviews[len(reviews)-1].ID))
+
+	res = &dto.CourseReviewListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
+		Reviews:    overviews,
+	}
 	return
 }
