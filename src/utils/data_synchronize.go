@@ -12,6 +12,11 @@ type PostMessage struct {
 	Content string `json:"content"`
 }
 
+type CourseReviewMessage struct {
+	ID      uint   `json:"id"`
+	Content string `json:"content"`
+}
+
 func PublishPostMessage(post PostMessage) error {
 	body, err := json.Marshal(post)
 	if err != nil {
@@ -28,5 +33,24 @@ func PublishPostMessage(post PostMessage) error {
 			ContentType: "application/json",
 			Body:        body,
 		})
+	return err
+}
+
+func PublishCourseReviewMessage(courseReview CourseReviewMessage) error {
+	body, err := json.Marshal(courseReview)
+	if err != nil {
+		return err
+	}
+
+	err = global.RabbitMqChannel.Publish(
+		"search",
+		"course_review",
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+		},
+	)
 	return err
 }

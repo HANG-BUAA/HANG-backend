@@ -67,6 +67,8 @@ func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDT
 	if err != nil {
 		return
 	}
+
+	// todo 用转换函数
 	res = &dto.CreateCourseReviewResponseDTO{
 		ID:        review.ID,
 		CourseID:  review.CourseID,
@@ -79,6 +81,16 @@ func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDT
 		UpdatedAt: review.UpdatedAt,
 		DeletedAt: review.DeletedAt,
 	}
+
+	go func() {
+		err := utils.PublishCourseReviewMessage(utils.CourseReviewMessage{
+			ID:      review.ID,
+			Content: review.Content,
+		})
+		if err != nil {
+			global.Logger.Error(err)
+		}
+	}()
 	return
 }
 
