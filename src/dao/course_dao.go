@@ -58,6 +58,16 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 		return nil, err
 	}
 
+	// 查找平均分
+	var average float64
+	if err := m.Orm.Model(&model.CourseReview{}).
+		Where("course_id = ?", course.ID).
+		Select("AVG(score)").
+		Scan(&average).
+		Error; err != nil {
+		return nil, err
+	}
+
 	// 查询标签列表
 	var tags []model.Tag
 	if err := m.Orm.Table("course_tag").
@@ -69,15 +79,16 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 		return nil, err
 	}
 	return &dto.CourseOverviewDTO{
-		ID:        course.ID,
-		Name:      course.Name,
-		Credits:   course.Credits,
-		Campus:    course.Campus,
-		ReviewNum: int(reviewNum),
-		Tags:      tags,
-		CreatedAt: course.CreatedAt,
-		UpdatedAt: course.UpdatedAt,
-		DeletedAt: course.DeletedAt,
+		ID:           course.ID,
+		Name:         course.Name,
+		Credits:      course.Credits,
+		Campus:       course.Campus,
+		ReviewNum:    int(reviewNum),
+		AverageScore: average,
+		Tags:         tags,
+		CreatedAt:    course.CreatedAt,
+		UpdatedAt:    course.UpdatedAt,
+		DeletedAt:    course.DeletedAt,
 	}, nil
 }
 

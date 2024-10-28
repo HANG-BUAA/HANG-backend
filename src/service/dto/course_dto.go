@@ -20,15 +20,16 @@ type CourseReviewOverviewDTO struct {
 }
 
 type CourseOverviewDTO struct {
-	ID        string         `json:"id"`
-	Name      string         `json:"name"`
-	Credits   *float32       `json:"credits"`
-	Campus    *int           `json:"campus"`
-	ReviewNum int            `json:"review_num"`
-	Tags      []model.Tag    `json:"tags"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at"`
+	ID           string         `json:"id"`
+	Name         string         `json:"name"`
+	Credits      *float32       `json:"credits"`
+	Campus       *int           `json:"campus"`
+	ReviewNum    int            `json:"review_num"`
+	AverageScore float64        `json:"average_score"`
+	Tags         []model.Tag    `json:"tags"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `json:"deleted_at"`
 }
 
 type AdminCourseCreateRequestDTO struct {
