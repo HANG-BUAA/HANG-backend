@@ -79,3 +79,11 @@ type CourseReviewListResponseDTO struct {
 	Pagination PaginationInfo            `json:"pagination"`
 	Reviews    []CourseReviewOverviewDTO `json:"reviews"`
 }
+
+type CourseRetrieveRequestDTO struct {
+	Course *model.Course
+}
+
+type CourseRetrieveResponseDTO struct {
+	Course CourseOverviewDTO `json:"course"`
+}

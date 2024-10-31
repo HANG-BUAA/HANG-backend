@@ -126,3 +126,23 @@ func (m CourseApi) ListReview(c *gin.Context) {
 		Data: *reviews,
 	})
 }
+
+func (m CourseApi) Retrieve(c *gin.Context) {
+	course := c.MustGet("course").(*model.Course)
+	var requestDTO dto.CourseRetrieveRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+		return
+	}
+	requestDTO.Course = course
+
+	courseOverview, err := m.Service.Retrieve(&requestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *courseOverview,
+	})
+}

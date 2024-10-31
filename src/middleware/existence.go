@@ -25,10 +25,10 @@ func locationToString(location ParamLocation) string {
 	}
 }
 
-func entityNotFoundErr(c *gin.Context, entity string, id uint) {
+func entityNotFoundErr(c *gin.Context, entity string, id any) {
 	api.Fail(c, api.ResponseJson{
 		Code: global.ERR_CODE_ENTITY_NOT_FOUND,
-		Msg:  fmt.Sprintf("entity %s with the id %d not found", entity, id),
+		Msg:  fmt.Sprintf("entity %s with the id %v not found", entity, id),
 	})
 }
 
@@ -105,28 +105,16 @@ func CommentExistence(location ParamLocation) gin.HandlerFunc {
 
 func CourseExistence(location ParamLocation) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var courseID uint
+		var courseID string
 		if location == URI {
-			uriCourseID := c.Param("course_id")
-			tmp, err := strconv.ParseUint(uriCourseID, 10, 64)
-			if err != nil {
-				paramMissErr(c, location, "course_id")
-				return
-			}
-			courseID = uint(tmp)
+			courseID = c.Param("course_id")
 		} else {
-			queryCourseID := c.Query("course_id")
-			tmp, err := strconv.ParseUint(queryCourseID, 10, 64)
-			if err != nil {
-				paramMissErr(c, location, "course_id")
-				return
-			}
-			courseID = uint(tmp)
+			courseID = c.Query("course_id")
 		}
 
 		// 判断 course 是否存在
 		var course model.Course
-		if err := global.RDB.First(&course, courseID).Error; err != nil {
+		if err := global.RDB.Where("id = ?", courseID).First(&course).Error; err != nil {
 			entityNotFoundErr(c, "course", courseID)
 			return
 		}

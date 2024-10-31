@@ -188,3 +188,16 @@ func (m *CourseService) CommonListReview(requestDTO *dto.CourseReviewListRequest
 	}
 	return
 }
+
+func (m *CourseService) Retrieve(requestDTO *dto.CourseRetrieveRequestDTO) (res *dto.CourseRetrieveResponseDTO, err error) {
+	course := requestDTO.Course
+
+	overview, err := m.Dao.ConvertCourseModelToOverviewDTO(course)
+	if err != nil {
+		return
+	}
+	res = &dto.CourseRetrieveResponseDTO{
+		Course: *overview,
+	}
+	return
+}
