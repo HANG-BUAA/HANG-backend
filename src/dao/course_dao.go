@@ -59,7 +59,7 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 	}
 
 	// 查找平均分
-	var average float64
+	var average *float64
 	if err := m.Orm.Model(&model.CourseReview{}).
 		Where("course_id = ?", course.ID).
 		Select("AVG(score)").

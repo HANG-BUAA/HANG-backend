@@ -25,7 +25,7 @@ type CourseOverviewDTO struct {
 	Credits      *float32       `json:"credits"`
 	Campus       *int           `json:"campus"`
 	ReviewNum    int            `json:"review_num"`
-	AverageScore float64        `json:"average_score"`
+	AverageScore *float64       `json:"average_score"`
 	Tags         []model.Tag    `json:"tags"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
