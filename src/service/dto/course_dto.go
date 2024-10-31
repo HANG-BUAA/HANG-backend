@@ -72,7 +72,8 @@ type CourseReviewListRequestDTO struct {
 	Cursor   string
 	PageSize int
 	User     *model.User
-	CourseID string `json:"course_id" form:"course_id" binding:"required" required_err:"course_id is Required"`
+	CourseID string  `json:"course_id" form:"course_id" binding:"required" required_err:"course_id is Required"`
+	Query    *string `form:"query" json:"query"`
 }
 
 type CourseReviewListResponseDTO struct {

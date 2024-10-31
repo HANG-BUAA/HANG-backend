@@ -115,7 +115,13 @@ func (m CourseApi) ListReview(c *gin.Context) {
 	requestDTO.User = user
 
 	// todo 搜索服务
-	reviews, err := m.Service.CommonListReview(&requestDTO)
+	var reviews *dto.CourseReviewListResponseDTO
+	var err error
+	if requestDTO.Query != nil {
+		reviews, err = m.Service.SearchListReview(&requestDTO)
+	} else {
+		reviews, err = m.Service.CommonListReview(&requestDTO)
+	}
 	if err != nil {
 		m.Fail(ResponseJson{
 			Msg: err.Error(),

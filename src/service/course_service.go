@@ -6,8 +6,14 @@ import (
 	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
+	"io"
+	"net/http"
+	"net/url"
+	"strconv"
 )
 
 var courseService *CourseService
@@ -84,8 +90,9 @@ func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDT
 
 	go func() {
 		err := utils.PublishCourseReviewMessage(utils.CourseReviewMessage{
-			ID:      review.ID,
-			Content: review.Content,
+			ID:       review.ID,
+			CourseID: review.CourseID,
+			Content:  review.Content,
 		})
 		if err != nil {
 			global.Logger.Error(err)
@@ -182,6 +189,75 @@ func (m *CourseService) CommonListReview(requestDTO *dto.CourseReviewListRequest
 	}
 	nextCursor := utils.IfThenElse(isEnd, nil, fmt.Sprintf("%d %d", reviews[len(reviews)-1].LikeNum, reviews[len(reviews)-1].ID))
 
+	res = &dto.CourseReviewListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
+		Reviews:    overviews,
+	}
+	return
+}
+
+func (m *CourseService) SearchListReview(requestDTO *dto.CourseReviewListRequestDTO) (res *dto.CourseReviewListResponseDTO, err error) {
+	// todo baseURL 换成全局变量
+	baseURL := fmt.Sprintf("http://%s:%s/course_review",
+		viper.GetString("search_client.host"),
+		viper.GetString("search_client.port"),
+	)
+	user := requestDTO.User
+	courseID := requestDTO.CourseID
+	query := requestDTO.Query
+	cursor := requestDTO.Cursor
+	pageSize := requestDTO.PageSize
+
+	params := url.Values{}
+	params.Add("query", *query)
+	params.Add("course_id", courseID)
+	params.Add("page_size", strconv.Itoa(pageSize))
+	params.Add("cursor", cursor)
+	fullUrl := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+
+	// 发送请求
+	resp, err := http.Get(fullUrl)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	// 响应结构
+	var responseBody struct {
+		Total         int `json:"total"`
+		CourseReviews []struct {
+			ID    uint    `json:"id"`
+			Score float64 `json:"score"`
+		} `json:"course_reviews"`
+		NextCursor string `json:"next_cursor"`
+	}
+
+	err = json.Unmarshal(body, &responseBody)
+	if err != nil {
+		return
+	}
+
+	var ids []uint
+	total := responseBody.Total
+	for _, courseReview := range responseBody.CourseReviews {
+		ids = append(ids, courseReview.ID)
+	}
+	nextCursor := responseBody.NextCursor
+
+	// 获取 review 列表
+	reviews, err := m.Dao.GetReviewsByIDs(ids)
+	if err != nil {
+		return
+	}
+
+	overviews, err := m.Dao.ConvertReviewModelsToOverviewDTOs(reviews, user)
+	if err != nil {
+		return
+	}
 	res = &dto.CourseReviewListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Reviews:    overviews,

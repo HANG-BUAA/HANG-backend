@@ -274,3 +274,11 @@ func (m *CourseDao) CommonListReview(cursor *struct {
 	isEnd := len(coursesReviews) < pageSize+1
 	return coursesReviews[:utils.IfThenElse(isEnd, len(coursesReviews), pageSize).(int)], int(total), isEnd, nil
 }
+
+func (m *CourseDao) GetReviewsByIDs(ids []uint) ([]model.CourseReview, error) {
+	var reviews []model.CourseReview
+	if err := m.Orm.Where("id IN (?)", ids).Find(&reviews).Error; err != nil {
+		return nil, err
+	}
+	return reviews, nil
+}

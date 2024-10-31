@@ -13,8 +13,9 @@ type PostMessage struct {
 }
 
 type CourseReviewMessage struct {
-	ID      uint   `json:"id"`
-	Content string `json:"content"`
+	ID       uint   `json:"id"`
+	CourseID string `json:"course_id"`
+	Content  string `json:"content"`
 }
 
 func PublishPostMessage(post PostMessage) error {
