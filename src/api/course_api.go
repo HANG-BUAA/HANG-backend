@@ -38,7 +38,7 @@ func (m CourseApi) CreateCourse(c *gin.Context) {
 
 func (m CourseApi) CreateReview(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
-	var requestDTO dto.CreateCourseReviewRequestDTO
+	var requestDTO dto.CourseReviewCreateRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
 		return
 	}
@@ -59,7 +59,7 @@ func (m CourseApi) CreateReview(c *gin.Context) {
 func (m CourseApi) LikeReview(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	review := c.MustGet("course_review").(*model.CourseReview)
-	var requestDTO dto.LikeCourseReviewRequestDTO
+	var requestDTO dto.CourseReviewLikeRequestDTO
 	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
 		return
 	}
@@ -150,5 +150,24 @@ func (m CourseApi) Retrieve(c *gin.Context) {
 	}
 	m.OK(ResponseJson{
 		Data: *courseOverview,
+	})
+}
+
+func (m CourseApi) CreateMaterial(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	var requestDTO dto.CourseMaterialCreateRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+		return
+	}
+	requestDTO.User = user
+	responseDTO, err := m.Service.CreateMaterial(&requestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: *responseDTO,
 	})
 }

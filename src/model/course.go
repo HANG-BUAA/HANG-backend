@@ -56,22 +56,30 @@ type CourseReviewLike struct {
 	UserID         uint `gorm:"primaryKey"`
 }
 
-type MaterialSource int
-
 const (
-	MaterialSource_BHPAN MaterialSource = iota + 1 // 北航云盘
-	MaterialSource_BLOG                            // 博客
+	MaterialSource_BHPAN int = iota + 1 // 北航云盘
+	MaterialSource_BLOG                 // 博客
 )
 
 type CourseMaterial struct {
-	ID          uint           `gorm:"primaryKey;autoIncrement;not null"`
-	CourseID    string         `gorm:"type:varchar(100);index;not null"`
-	UserID      uint           `gorm:"index;not null"`
-	Link        string         `gorm:"type:varchar(1024);not null"` // 资料链接
-	Source      MaterialSource `gorm:"type:int;index"`
-	Description string         `gorm:"type:text;not null"`
-	IsApproved  bool           `gorm:"default:false;not null"`
-	IsOfficial  bool           `gorm:"default:false;not null"`
+	ID          uint   `gorm:"primaryKey;autoIncrement;not null"`
+	CourseID    string `gorm:"type:varchar(100);index;not null"`
+	UserID      uint   `gorm:"index;not null"`
+	Link        string `gorm:"type:varchar(1024);not null"` // 资料链接
+	Source      int    `gorm:"type:int;index"`
+	Description string `gorm:"type:text;not null"`
+	IsApproved  bool   `gorm:"default:false;not null"`
+	IsOfficial  bool   `gorm:"default:false;not null"`
+	LikeNum     int    `gorm:"default:0;index; not null"`
+	LikeVersion int    `gorm:"default:0;not null"` // 喜欢操作的乐观锁版本号
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+type CourseMaterialLike struct {
+	CourseMaterialID uint `gorm:"primaryKey"`
+	UserID           uint `gorm:"primaryKey"`
 }
 
 func (m *CourseMaterial) BeforeSave(tx *gorm.DB) error {

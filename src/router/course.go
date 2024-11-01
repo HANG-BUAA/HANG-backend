@@ -20,6 +20,7 @@ func InitCourseRoutes() {
 			rgAuthCourse.GET("", middleware.CheckPaginationParams(), courseApi.ListCourse)
 			rgAuthCourse.GET("/reviews", middleware.CheckPaginationParams(), courseApi.ListReview)
 			rgAuthCourse.GET("/:course_id", middleware.CourseExistence(middleware.URI), courseApi.Retrieve)
+			rgAuthCourse.POST("/materials", middleware.Permission(permission.UploadMaterial), courseApi.CreateMaterial)
 		}
 		rgAdminCourse := rgAdminGroup.Group("/courses")
 		{

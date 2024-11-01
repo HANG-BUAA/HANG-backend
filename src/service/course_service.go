@@ -57,7 +57,7 @@ func (m *CourseService) CreateCourse(requestDTO *dto.AdminCourseCreateRequestDTO
 	return
 }
 
-func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDTO) (res *dto.CreateCourseReviewResponseDTO, err error) {
+func (m *CourseService) CreateReview(requestDTO *dto.CourseReviewCreateRequestDTO) (res *dto.CourseReviewCreateResponseDTO, err error) {
 	user := requestDTO.User
 	courseID := requestDTO.CourseID
 	Content := requestDTO.Content
@@ -74,19 +74,11 @@ func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDT
 		return
 	}
 
-	// todo 用转换函数
-	res = &dto.CreateCourseReviewResponseDTO{
-		ID:        review.ID,
-		CourseID:  review.CourseID,
-		Content:   review.Content,
-		Score:     review.Score,
-		IsSelf:    true,
-		LikeNum:   0,
-		HasLiked:  false,
-		CreatedAt: review.CreatedAt,
-		UpdatedAt: review.UpdatedAt,
-		DeletedAt: review.DeletedAt,
+	overview, err := m.Dao.ConvertReviewModelToOverviewDTO(review, user)
+	if err != nil {
+		return
 	}
+	res = (*dto.CourseReviewCreateResponseDTO)(overview)
 
 	go func() {
 		err := utils.PublishCourseReviewMessage(utils.CourseReviewMessage{
@@ -101,7 +93,7 @@ func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDT
 	return
 }
 
-func (m *CourseService) LikeReview(requestDTO *dto.LikeCourseReviewRequestDTO) (err error) {
+func (m *CourseService) LikeReview(requestDTO *dto.CourseReviewLikeRequestDTO) (err error) {
 	user := requestDTO.User
 	courseReview := requestDTO.CourseReview
 
@@ -275,5 +267,31 @@ func (m *CourseService) Retrieve(requestDTO *dto.CourseRetrieveRequestDTO) (res 
 	res = &dto.CourseRetrieveResponseDTO{
 		Course: *overview,
 	}
+	return
+}
+
+func (m *CourseService) CreateMaterial(requestDTO *dto.CourseMaterialCreateRequestDTO) (res *dto.CourseMaterialCreateResponseDTO, err error) {
+	user := requestDTO.User
+	courseID := requestDTO.CourseID
+	link := requestDTO.Link
+	source := requestDTO.Source
+	description := requestDTO.Description
+
+	// 检查课程是否存在
+	_, err = m.Dao.GetCourseByID(courseID)
+	if err != nil {
+		return nil, err
+	}
+
+	material, err := m.Dao.CreateMaterial(user, courseID, link, description, source, false, false)
+	if err != nil {
+		return nil, err
+	}
+
+	overview, err := m.Dao.ConvertMaterialModelToOverviewDTO(material, user)
+	if err != nil {
+		return
+	}
+	res = (*dto.CourseMaterialCreateResponseDTO)(overview)
 	return
 }
