@@ -119,3 +119,8 @@ type CourseMaterialCreateRequestDTO struct {
 }
 
 type CourseMaterialCreateResponseDTO CourseMaterialOverviewDTO
+
+type CourseMaterialLikeRequestDTO struct {
+	User           *model.User
+	CourseMaterial *model.CourseMaterial
+}

@@ -171,3 +171,27 @@ func (m CourseApi) CreateMaterial(c *gin.Context) {
 		Data: *responseDTO,
 	})
 }
+
+func (m CourseApi) LikeMaterial(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	material := c.MustGet("course_material").(*model.CourseMaterial)
+	var requestDTO dto.CourseMaterialLikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+		return
+	}
+	requestDTO.User = user
+	requestDTO.CourseMaterial = material
+
+	err := m.Service.LikeMaterial(&requestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "like success",
+		},
+	})
+}

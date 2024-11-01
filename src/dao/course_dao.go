@@ -253,6 +253,14 @@ func (m *CourseDao) CheckReviewLiked(user *model.User, courseReview *model.Cours
 	return true
 }
 
+func (m *CourseDao) CheckMaterialLiked(user *model.User, courseMaterial *model.CourseMaterial) bool {
+	var courseMaterialLike model.CourseMaterialLike
+	if err := m.Orm.Where("user_id = ? AND course_material_id = ?", user.ID, courseMaterial.ID).First(&courseMaterialLike).Error; err != nil {
+		return false
+	}
+	return true
+}
+
 func (m *CourseDao) ListCourse(cursor string, pageSize int, keyword string, tags []uint) ([]model.Course, int, bool, error) {
 	query := m.Orm.Model(&model.Course{})
 	if keyword != "" {
@@ -351,13 +359,22 @@ func (m *CourseDao) LikeMaterial(user *model.User, material *model.CourseMateria
 		}
 
 		// 动态维护
-		result := tx.Model(&model.CourseMaterial{}).Where("id = ? AND like_version = ?", material.ID, material.LikeVersion).Updates(map[string]interface{}{
-			"like_num":     material.LikeNum + 1,
-			"like_version": material.LikeVersion + 1,
-		})
+		// 首先获取当前记录，确保Source字段正确 ———— beforeSave 钩子的问题
+		var existingMaterial model.CourseMaterial
+		if err := tx.Where("id = ?", material.ID).First(&existingMaterial).Error; err != nil {
+			return err // 处理错误，例如记录不存在的情况
+		}
+
+		// 确保使用有效的Source值
+		existingMaterial.LikeNum += 1
+		existingMaterial.LikeVersion += 1
+
+		// 执行更新
+		result := tx.Save(&existingMaterial)
 		if result.RowsAffected == 0 {
 			return custom_error.NewOptimisticLockError()
 		}
+
 		return nil
 	})
 }

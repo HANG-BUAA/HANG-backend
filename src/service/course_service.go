@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/viper"
+	"gorm.io/gorm"
 	"io"
 	"net/http"
 	"net/url"
@@ -294,4 +295,25 @@ func (m *CourseService) CreateMaterial(requestDTO *dto.CourseMaterialCreateReque
 	}
 	res = (*dto.CourseMaterialCreateResponseDTO)(overview)
 	return
+}
+
+func (m *CourseService) LikeMaterial(requestDTO *dto.CourseMaterialLikeRequestDTO) (err error) {
+	user := requestDTO.User
+	courseMaterial := requestDTO.CourseMaterial
+
+	// 判断用户是否已经喜欢
+	if m.Dao.CheckMaterialLiked(user, courseMaterial) {
+		return errors.New("liked material")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.LikeMaterial(user, courseMaterial)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
 }
