@@ -39,7 +39,7 @@ type CourseTag struct {
 
 // CourseReview 课程评价
 type CourseReview struct {
-	ID          uint   `gorm:"primaryKey;autoIncrement; not null"`
+	ID          uint   `gorm:"primaryKey;autoIncrement;not null"`
 	CourseID    string `gorm:"type:varchar(100);index;not null"`
 	UserID      uint   `gorm:"index;not null"`
 	Content     string `gorm:"type:text;not null"`
@@ -54,4 +54,29 @@ type CourseReview struct {
 type CourseReviewLike struct {
 	CourseReviewID uint `gorm:"primaryKey"`
 	UserID         uint `gorm:"primaryKey"`
+}
+
+type MaterialSource int
+
+const (
+	MaterialSource_BHPAN MaterialSource = iota + 1 // 北航云盘
+	MaterialSource_BLOG                            // 博客
+)
+
+type CourseMaterial struct {
+	ID          uint           `gorm:"primaryKey;autoIncrement;not null"`
+	CourseID    string         `gorm:"type:varchar(100);index;not null"`
+	UserID      uint           `gorm:"index;not null"`
+	Link        string         `gorm:"type:varchar(1024);not null"` // 资料链接
+	Source      MaterialSource `gorm:"type:int;index"`
+	Description string         `gorm:"type:text;not null"`
+	IsApproved  bool           `gorm:"default:false;not null"`
+	IsOfficial  bool           `gorm:"default:false;not null"`
+}
+
+func (m *CourseMaterial) BeforeSave(tx *gorm.DB) error {
+	if m.Source < 1 || m.Source > 2 {
+		return errors.New("invalid material source")
+	}
+	return nil
 }
