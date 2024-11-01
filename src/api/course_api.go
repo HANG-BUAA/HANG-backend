@@ -114,7 +114,6 @@ func (m CourseApi) ListReview(c *gin.Context) {
 	requestDTO.PageSize = pageSize
 	requestDTO.User = user
 
-	// todo 搜索服务
 	var reviews *dto.CourseReviewListResponseDTO
 	var err error
 	if requestDTO.Query != nil {
@@ -194,4 +193,30 @@ func (m CourseApi) LikeMaterial(c *gin.Context) {
 			"status": "like success",
 		},
 	})
+}
+
+func (m CourseApi) ListMaterial(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	cursor := c.MustGet("cursor").(string)
+	pageSize := c.MustGet("page_size").(int)
+	var requestDTO dto.CourseMaterialListRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+		return
+	}
+	requestDTO.Cursor = cursor
+	requestDTO.PageSize = pageSize
+	requestDTO.User = user
+
+	materials, err := m.Service.ListMaterial(&requestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	m.OK(ResponseJson{
+		Data: *materials,
+	})
+
 }

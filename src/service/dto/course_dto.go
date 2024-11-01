@@ -124,3 +124,16 @@ type CourseMaterialLikeRequestDTO struct {
 	User           *model.User
 	CourseMaterial *model.CourseMaterial
 }
+
+type CourseMaterialListRequestDTO struct {
+	Cursor     string
+	PageSize   int
+	User       *model.User
+	CourseID   string `json:"course_id" form:"course_id" binding:"required" required_err:"course_id is Required"`
+	IsOfficial *bool  `json:"is_official" form:"is_official" binding:"required" required_err:"is_official is Required"`
+}
+
+type CourseMaterialListResponseDTO struct {
+	Pagination PaginationInfo              `json:"pagination"`
+	Materials  []CourseMaterialOverviewDTO `json:"materials"`
+}

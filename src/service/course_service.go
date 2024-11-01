@@ -149,7 +149,11 @@ func (m *CourseService) CommonListReview(requestDTO *dto.CourseReviewListRequest
 	user := requestDTO.User
 	courseID := requestDTO.CourseID
 
-	// todo 检查课程是否存在
+	// 检查课程是否存在
+	_, err = m.Dao.GetCourseByID(courseID)
+	if err != nil {
+		return nil, err
+	}
 
 	var cursorLikeNum int
 	var cursorID uint
@@ -316,4 +320,48 @@ func (m *CourseService) LikeMaterial(requestDTO *dto.CourseMaterialLikeRequestDT
 		}
 	}
 	return custom_error.NewOptimisticLockError()
+}
+
+func (m *CourseService) ListMaterial(requestDTO *dto.CourseMaterialListRequestDTO) (res *dto.CourseMaterialListResponseDTO, err error) {
+	pageSize := requestDTO.PageSize
+	user := requestDTO.User
+	courseID := requestDTO.CourseID
+	isOfficial := requestDTO.IsOfficial
+
+	// 检查课程是否存在
+	_, err = m.Dao.GetCourseByID(courseID)
+	if err != nil {
+		return
+	}
+
+	var cursorLikeNum int
+	var cursorID uint
+	cursor := new(struct {
+		LikeNum int
+		ID      uint
+	})
+	_, err = fmt.Sscanf(requestDTO.Cursor, "%d %d", &cursorLikeNum, &cursorID)
+	if err != nil {
+		cursor = nil
+	} else {
+		cursor.LikeNum = cursorLikeNum
+		cursor.ID = cursorID
+	}
+
+	materials, total, isEnd, err := m.Dao.ListMaterial(cursor, pageSize, courseID, *isOfficial)
+	if err != nil {
+		return
+	}
+
+	overviews, err := m.Dao.ConvertMaterialModelsToOverviews(materials, user)
+	if err != nil {
+		return
+	}
+	nextCursor := utils.IfThenElse(isEnd, nil, fmt.Sprintf("%d %d", materials[len(materials)-1].LikeNum, materials[len(materials)-1].ID))
+
+	res = &dto.CourseMaterialListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, len(materials), nextCursor),
+		Materials:  overviews,
+	}
+	return
 }

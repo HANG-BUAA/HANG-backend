@@ -48,6 +48,18 @@ func (m *CourseDao) ConvertReviewModelsToOverviewDTOs(reviews []model.CourseRevi
 	return res, nil
 }
 
+func (m *CourseDao) ConvertMaterialModelsToOverviews(materials []model.CourseMaterial, user *model.User) ([]dto.CourseMaterialOverviewDTO, error) {
+	res := make([]dto.CourseMaterialOverviewDTO, 0)
+	for _, material := range materials {
+		tmp, err := m.ConvertMaterialModelToOverviewDTO(&material, user)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, *tmp)
+	}
+	return res, nil
+}
+
 func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.CourseOverviewDTO, error) {
 	// 查找 reviewNum
 	var reviewNum int64
