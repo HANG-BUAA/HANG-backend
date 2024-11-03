@@ -2,8 +2,6 @@ package router
 
 import (
 	"HANG-backend/src/api"
-	"HANG-backend/src/middleware"
-	"HANG-backend/src/permission"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,9 +18,9 @@ func InitUserRoutes() {
 		{
 			rgAuthUser.PUT("/update-avatar", userApi.UploadAvatar)
 		}
-		rgAdminUser := rgAdmin.Group("/users")
-		{
-			rgAdminUser.GET("", middleware.Permission(permission.GetUserList), userApi.AdminList)
-		}
+		//rgAdminUser := rgAdmin.Group("/users")
+		//{
+		//
+		//}
 	})
 }

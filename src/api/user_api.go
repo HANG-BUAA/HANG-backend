@@ -128,20 +128,3 @@ func (m UserApi) UploadAvatar(c *gin.Context) {
 		Data: *iUserUpdateAvatarResponseDTO,
 	})
 }
-
-func (m UserApi) AdminList(c *gin.Context) {
-	var adminUserListRequestDTO dto.AdminUserListRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &adminUserListRequestDTO}).GetError(); err != nil {
-		return
-	}
-	adminUserListResponseDTO, err := m.Service.AdminList(&adminUserListRequestDTO)
-	if err != nil {
-		m.Fail(ResponseJson{
-			Msg: err.Error(),
-		})
-		return
-	}
-	m.OK(ResponseJson{
-		Data: *adminUserListResponseDTO,
-	})
-}

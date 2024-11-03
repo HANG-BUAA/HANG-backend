@@ -126,34 +126,3 @@ func (m *UserService) UpdateAvatar(userUpdateAvatarRequestDTO *dto.UserUpdateAva
 	}
 	return
 }
-
-func (m *UserService) AdminList(requestDTO *dto.AdminUserListRequestDTO) (responseDTO *dto.AdminUserListResponseDTO, err error) {
-	id := requestDTO.ID
-	studentID := requestDTO.StudentID
-	username := requestDTO.Username
-	role := requestDTO.Role
-	page := requestDTO.Page
-	pageSize := requestDTO.PageSize
-	users, err := m.Dao.AdminList(id, studentID, username, role, page, pageSize)
-	if err != nil {
-		return
-	}
-	userOverviews := make([]dto.UserOverviewDTO, 0)
-	for i := range users {
-		userOverviews = append(userOverviews, dto.UserOverviewDTO{
-			ID:        users[i].ID,
-			StudentID: users[i].StudentID,
-			Username:  users[i].Username,
-			Role:      users[i].Role,
-			CreatedAt: users[i].CreatedAt,
-		})
-	}
-	responseDTO = &dto.AdminUserListResponseDTO{
-		Users: userOverviews,
-		Pagination: dto.PaginationInfo{
-			TotalRecords: 777777,
-			PageSize:     pageSize,
-		},
-	}
-	return
-}

@@ -67,28 +67,3 @@ func (m *UserDao) UpdateUser(userID uint, updatedFields map[string]interface{}) 
 	}
 	return nil
 }
-
-func (m *UserDao) AdminList(id *uint, studentID *string, username *string, Role *uint, page int, pageSize int) ([]model.User, error) {
-	var users []model.User
-	query := m.Orm.Unscoped().Model(&model.User{})
-	if id != nil {
-		query = query.Where("id = ?", *id)
-	}
-	if studentID != nil {
-		query = query.Where("student_id = ?", *studentID)
-	}
-	if username != nil {
-		query = query.Where("username = ?", *username)
-	}
-	if Role != nil {
-		query = query.Where("role = ?", *Role)
-	}
-
-	// 添加分页
-	offset := (page - 1) * pageSize
-	query = query.Offset(offset).Limit(pageSize).Find(&users)
-	if err := query.Find(&users).Error; err != nil {
-		return nil, err
-	}
-	return users, nil
-}
