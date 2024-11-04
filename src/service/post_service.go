@@ -185,7 +185,13 @@ func (m *PostService) CommonList(postListRequestDTO *dto.PostListRequestDTO) (re
 	if err != nil {
 		return
 	}
-	nextCursor := utils.IfThenElse(isEnd, 0, posts[len(posts)-1].ID)
+
+	var nextCursor any
+	if isEnd {
+		nextCursor = 0
+	} else {
+		nextCursor = posts[len(posts)-1].ID
+	}
 
 	res = &dto.PostListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
