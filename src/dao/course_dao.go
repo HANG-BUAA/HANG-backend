@@ -70,6 +70,14 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 		return nil, err
 	}
 
+	// 查找课程资料数
+	var materialNum int64
+	if err := m.Orm.Model(&model.CourseMaterial{}).
+		Where("course_id = ?", course.ID).
+		Count(&materialNum).Error; err != nil {
+		return nil, err
+	}
+
 	// 查找平均分
 	var average *float64
 	if err := m.Orm.Model(&model.CourseReview{}).
@@ -96,6 +104,7 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 		Credits:      course.Credits,
 		Campus:       course.Campus,
 		ReviewNum:    int(reviewNum),
+		MaterialNum:  int(materialNum),
 		AverageScore: average,
 		Tags:         tags,
 		CreatedAt:    course.CreatedAt,
