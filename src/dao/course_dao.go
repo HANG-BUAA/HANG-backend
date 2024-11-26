@@ -266,6 +266,37 @@ func (m *CourseDao) LikeReview(user *model.User, review *model.CourseReview) err
 	})
 }
 
+func (m *CourseDao) UnlikeReview(user *model.User, review *model.CourseReview) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		tx.Where("user_id = ? AND course_review_id = ?", user.ID, review.ID).Delete(&model.CourseReviewLike{})
+
+		result := tx.Model(&model.CourseReview{}).Where("id = ? AND like_version = ?", review.ID, review.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     review.LikeNum - 1,
+			"like_version": review.LikeVersion + 1,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
+}
+
+func (m *CourseDao) UnlikeMaterial(user *model.User, material *model.CourseMaterial) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		tx.Where("user_id = ? AND course_material_id = ?", user.ID, material.ID).Delete(&model.CourseMaterialLike{})
+
+		result := tx.Model(&model.CourseMaterial{}).Where("id = ? AND like_version = ?", material.ID, material.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     material.LikeNum - 1,
+			"like_version": material.LikeVersion + 1,
+			"source":       material.Source,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
+}
+
 func (m *CourseDao) CheckReviewLiked(user *model.User, courseReview *model.CourseReview) bool {
 	var courseReviewLike model.CourseReviewLike
 	if err := m.Orm.Where("user_id = ? AND course_review_id = ?", user.ID, courseReview.ID).First(&courseReviewLike).Error; err != nil {

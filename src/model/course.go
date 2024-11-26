@@ -82,7 +82,7 @@ type CourseMaterialLike struct {
 	UserID           uint `gorm:"primaryKey"`
 }
 
-func (m *CourseMaterial) BeforeSave(tx *gorm.DB) error {
+func (m *CourseMaterial) BeforeCreate(tx *gorm.DB) error {
 	if m.Source < 1 || m.Source > 2 {
 		return errors.New("invalid material source")
 	}

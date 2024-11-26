@@ -78,6 +78,11 @@ type CourseReviewLikeRequestDTO struct {
 	CourseReview *model.CourseReview
 }
 
+type CourseReviewUnlikeRequestDTO struct {
+	User         *model.User
+	CourseReview *model.CourseReview
+}
+
 type CourseListRequestDTO struct {
 	Cursor   string
 	PageSize int
@@ -122,6 +127,11 @@ type CourseMaterialCreateRequestDTO struct {
 type CourseMaterialCreateResponseDTO CourseMaterialOverviewDTO
 
 type CourseMaterialLikeRequestDTO struct {
+	User           *model.User
+	CourseMaterial *model.CourseMaterial
+}
+
+type CourseMaterialUnlikeRequestDTO struct {
 	User           *model.User
 	CourseMaterial *model.CourseMaterial
 }

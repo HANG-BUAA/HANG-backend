@@ -115,6 +115,45 @@ func (m *CourseService) LikeReview(requestDTO *dto.CourseReviewLikeRequestDTO) (
 	return custom_error.NewOptimisticLockError()
 }
 
+func (m *CourseService) UnlikeReview(requestDTO *dto.CourseReviewUnlikeRequestDTO) (err error) {
+	user := requestDTO.User
+	courseReview := requestDTO.CourseReview
+	if !m.Dao.CheckReviewLiked(user, courseReview) {
+		return errors.New("unliked review")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.UnlikeReview(user, courseReview)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
+func (m *CourseService) UnlikeMaterial(requestDTO *dto.CourseMaterialUnlikeRequestDTO) (err error) {
+	user := requestDTO.User
+	courseMaterial := requestDTO.CourseMaterial
+
+	if !m.Dao.CheckMaterialLiked(user, courseMaterial) {
+		return errors.New("unliked material")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.UnlikeMaterial(user, courseMaterial)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
 func (m *CourseService) ListCourse(requestDTO *dto.CourseListRequestDTO) (res *dto.CourseListResponseDTO, err error) {
 	pageSize := requestDTO.PageSize
 	keyword := requestDTO.Keyword

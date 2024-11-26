@@ -60,7 +60,7 @@ func (m CourseApi) LikeReview(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	review := c.MustGet("course_review").(*model.CourseReview)
 	var requestDTO dto.CourseReviewLikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
 	requestDTO.User = user
@@ -99,6 +99,55 @@ func (m CourseApi) ListCourse(c *gin.Context) {
 	}
 	m.OK(ResponseJson{
 		Data: *courses,
+	})
+}
+
+func (m CourseApi) UnlikeReview(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	review := c.MustGet("course_review").(*model.CourseReview)
+	var requestDTO dto.CourseReviewUnlikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+		return
+	}
+	requestDTO.User = user
+	requestDTO.CourseReview = review
+	err := m.Service.UnlikeReview(&requestDTO)
+
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "unlike success",
+		},
+	})
+}
+
+func (m CourseApi) UnlikeMaterial(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	material := c.MustGet("course_material").(*model.CourseMaterial)
+
+	var requestDTO dto.CourseMaterialUnlikeRequestDTO
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO, BindParamsFromUri: true}).GetError(); err != nil {
+		return
+	}
+	requestDTO.User = user
+	requestDTO.CourseMaterial = material
+
+	err := m.Service.UnlikeMaterial(&requestDTO)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "unlike success",
+		},
 	})
 }
 
@@ -175,7 +224,7 @@ func (m CourseApi) LikeMaterial(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	material := c.MustGet("course_material").(*model.CourseMaterial)
 	var requestDTO dto.CourseMaterialLikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &requestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
 	requestDTO.User = user
