@@ -143,7 +143,13 @@ func (m *CourseService) ListCourse(requestDTO *dto.CourseListRequestDTO) (res *d
 	if err != nil {
 		return
 	}
-	nextCursor := utils.IfThenElse(isEnd, 0, courses[len(courses)-1].ID)
+
+	var nextCursor any
+	if isEnd {
+		nextCursor = 0
+	} else {
+		nextCursor = courses[len(courses)-1].ID
+	}
 	res = &dto.CourseListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Courses:    overviews,
@@ -187,7 +193,13 @@ func (m *CourseService) CommonListReview(requestDTO *dto.CourseReviewListRequest
 	if err != nil {
 		return
 	}
-	nextCursor := utils.IfThenElse(isEnd, nil, fmt.Sprintf("%d %d", reviews[len(reviews)-1].LikeNum, reviews[len(reviews)-1].ID))
+
+	var nextCursor any
+	if isEnd {
+		nextCursor = 0
+	} else {
+		nextCursor = fmt.Sprintf("%d %d", reviews[len(reviews)-1].LikeNum, reviews[len(reviews)-1].ID)
+	}
 
 	res = &dto.CourseReviewListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),

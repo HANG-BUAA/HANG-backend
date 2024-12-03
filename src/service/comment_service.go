@@ -5,7 +5,6 @@ import (
 	"HANG-backend/src/dao"
 	"HANG-backend/src/global"
 	"HANG-backend/src/service/dto"
-	"HANG-backend/src/utils"
 	"errors"
 	"strconv"
 )
@@ -129,7 +128,12 @@ func (m *CommentService) ListFirstLevel(commentListRequestDTO *dto.CommentListRe
 		return
 	}
 
-	nextCursor := utils.IfThenElse(isEnd, 0, comments[len(comments)-1].ID)
+	var nextCursor any
+	if isEnd {
+		nextCursor = 0
+	} else {
+		nextCursor = comments[len(comments)-1].ID
+	}
 	res = &dto.CommentListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Comments:   overviews,
@@ -171,7 +175,12 @@ func (m *CommentService) ListSecondLevel(commentListRequestDTO *dto.CommentListR
 		return
 	}
 
-	nextCursor := utils.IfThenElse(isEnd, 0, comments[len(comments)-1].ID)
+	var nextCursor any
+	if isEnd {
+		nextCursor = 0
+	} else {
+		nextCursor = comments[len(comments)-1].ID
+	}
 	res = &dto.CommentListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(overviews), nextCursor),
 		Comments:   overviews,
