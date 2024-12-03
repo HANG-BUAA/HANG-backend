@@ -408,7 +408,13 @@ func (m *CourseService) ListMaterial(requestDTO *dto.CourseMaterialListRequestDT
 	if err != nil {
 		return
 	}
-	nextCursor := utils.IfThenElse(isEnd, nil, fmt.Sprintf("%d %d", materials[len(materials)-1].LikeNum, materials[len(materials)-1].ID))
+
+	var nextCursor any
+	if isEnd {
+		nextCursor = nil
+	} else {
+		nextCursor = fmt.Sprintf("%d %d", materials[len(materials)-1].LikeNum, materials[len(materials)-1].ID)
+	}
 
 	res = &dto.CourseMaterialListResponseDTO{
 		Pagination: *dto.BuildPaginationInfo(total, len(materials), nextCursor),
