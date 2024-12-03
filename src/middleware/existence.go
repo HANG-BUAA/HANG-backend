@@ -153,3 +153,35 @@ func CourseReviewExistence(location ParamLocation) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func CourseMaterialExistence(location ParamLocation) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var courseMaterialID uint
+		if location == URI {
+			uriCourseMaterialID := c.Param("material_id")
+			tmp, err := strconv.ParseUint(uriCourseMaterialID, 10, 64)
+			if err != nil {
+				paramMissErr(c, location, "course_material_id")
+				return
+			}
+			courseMaterialID = uint(tmp)
+		} else {
+			queryCourseMaterialID := c.Query("material_id")
+			tmp, err := strconv.ParseUint(queryCourseMaterialID, 10, 64)
+			if err != nil {
+				paramMissErr(c, location, "course_material_id")
+				return
+			}
+			courseMaterialID = uint(tmp)
+		}
+
+		var courseMaterial model.CourseMaterial
+		if err := global.RDB.First(&courseMaterial, courseMaterialID).Error; err != nil {
+			entityNotFoundErr(c, "course_material", courseMaterialID)
+			return
+		}
+		c.Set("course_material", &courseMaterial)
+		c.Next()
+	}
+
+}

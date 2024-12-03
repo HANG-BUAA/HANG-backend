@@ -35,13 +35,14 @@ type PermissionWeight struct {
 
 // 权限的集合，永远不要打乱当前的顺序，有新的权限的话加到最后面
 const (
-	SetRole      Permission = iota + 1 // 设置其他人的权限
-	PostPost                           // 发帖子
-	PostComment                        // 发评论
-	GetUserList                        // 获取用户列表
-	CreateCourse                       // 创建课程
-	CreateTag                          // 创建标签
-	ReviewCourse                       // 评论课程
+	SetRole        Permission = iota + 1 // 设置其他人的权限
+	PostPost                             // 发帖子
+	PostComment                          // 发评论
+	GetUserList                          // 获取用户列表
+	CreateCourse                         // 创建课程
+	CreateTag                            // 创建标签
+	ReviewCourse                         // 评论课程
+	UploadMaterial                       // 上传资料
 )
 
 var Permissions = []PermissionWeight{
@@ -53,10 +54,14 @@ var Permissions = []PermissionWeight{
 	{CreateCourse, "创建课程", 7000},
 	{CreateTag, "创建标签", 7000},
 	{ReviewCourse, "评论课程", 1000},
+	{UploadMaterial, "上传课程资料", 1000},
 }
 
 var userPermissions = []Permission{
-	PostPost, PostComment, ReviewCourse,
+	PostPost,
+	PostComment,
+	ReviewCourse,
+	UploadMaterial,
 }
 
 var adminPermissions = []Permission{
@@ -66,6 +71,7 @@ var adminPermissions = []Permission{
 	CreateCourse,
 	CreateTag,
 	ReviewCourse,
+	UploadMaterial,
 }
 
 var superAdminPermissions = []Permission{
@@ -76,6 +82,7 @@ var superAdminPermissions = []Permission{
 	CreateCourse,
 	CreateTag,
 	ReviewCourse,
+	UploadMaterial,
 }
 
 var rolePermissionMap = map[Role][]Permission{

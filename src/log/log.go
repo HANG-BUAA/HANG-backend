@@ -61,13 +61,31 @@ type AccessLog struct {
 	RequestID     string `json:"request_id"`     // 请求唯一标识
 }
 
+type ApplicationLogStatus bool
+
+const (
+	Success ApplicationLogStatus = true
+	Failure ApplicationLogStatus = false
+)
+
+type Event string
+
 type ApplicationLog struct {
 	BaseLog
-	Operation      string `json:"operation"`
-	Message        string `json:"message"`
-	UserID         uint   `json:"user_id"`
-	Duration       int64  `json:"duration"`
-	AdditionalInfo string `json:"additional_info"`
+	User struct {
+		ID        uint   `json:"id"`
+		StudentID string `json:"student_id"`
+	} `json:"user"`
+	Application struct {
+		Event    Event                `json:"event"`
+		EntityID any                  `json:"entity_id"`
+		Status   ApplicationLogStatus `json:"status"`
+		Error    struct {
+			SysMessage string `json:"sys_message"`
+			Info       string `json:"info"`
+		} `json:"error"`
+	} `json:"application"`
+	AdditionalInfo *string `json:"additional_info"`
 }
 
 func publishLog(level Level, log any) {
@@ -133,6 +151,46 @@ func PublishAccessLog(
 	publishLog(DEBUG_LEVEL, accessLog)
 }
 
-func PublishApplicationLog() {
-	// todo
+func PublishApplicationLog(
+	user *model.User,
+	event Event,
+	entityID any,
+	status ApplicationLogStatus,
+	ErrorSysMessage *string,
+	ErrorInfo *string,
+	additionalInfo *string,
+) {
+	accessLog := ApplicationLog{
+		BaseLog: BaseLog{
+			Type:      APPLICATION_TYPE,
+			Level:     INFO_LEVEL,
+			Source:    1,
+			Timestamp: time.Now().Unix(),
+		},
+		Application: struct {
+			Event    Event                `json:"event"`
+			EntityID any                  `json:"entity_id"`
+			Status   ApplicationLogStatus `json:"status"`
+			Error    struct {
+				SysMessage string `json:"sys_message"`
+				Info       string `json:"info"`
+			} `json:"error"`
+		}{Event: event, EntityID: entityID, Status: status},
+	}
+	if user != nil {
+		accessLog.User = struct {
+			ID        uint   `json:"id"`
+			StudentID string `json:"student_id"`
+		}{ID: user.ID, StudentID: user.StudentID}
+	}
+	if ErrorSysMessage != nil {
+		accessLog.Application.Error.SysMessage = *ErrorSysMessage
+	}
+	if ErrorInfo != nil {
+		accessLog.Application.Error.Info = *ErrorInfo
+	}
+	if additionalInfo != nil {
+		accessLog.AdditionalInfo = additionalInfo
+	}
+	publishLog(INFO_LEVEL, accessLog)
 }

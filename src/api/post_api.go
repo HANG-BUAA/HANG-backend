@@ -53,7 +53,7 @@ func (m PostApi) Like(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	post := c.MustGet("post").(*model.Post)
 	var postLikeRequestDTO dto.PostLikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postLikeRequestDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
 	postLikeRequestDTO.User = user
@@ -78,7 +78,7 @@ func (m PostApi) Unlike(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	post := c.MustGet("post").(*model.Post)
 	var postUnlikeRequestDTO dto.PostUnlikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postUnlikeRequestDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postUnlikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
 	postUnlikeRequestDTO.User = user
@@ -129,7 +129,7 @@ func (m PostApi) Uncollect(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	post := c.MustGet("post").(*model.Post)
 	var postUncollectRequestDTO dto.PostUncollectRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postUncollectRequestDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &postUncollectRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
 	postUncollectRequestDTO.User = user

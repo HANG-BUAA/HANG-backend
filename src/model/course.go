@@ -39,7 +39,7 @@ type CourseTag struct {
 
 // CourseReview 课程评价
 type CourseReview struct {
-	ID          uint   `gorm:"primaryKey;autoIncrement; not null"`
+	ID          uint   `gorm:"primaryKey;autoIncrement;not null"`
 	CourseID    string `gorm:"type:varchar(100);index;not null"`
 	UserID      uint   `gorm:"index;not null"`
 	Content     string `gorm:"type:text;not null"`
@@ -54,4 +54,37 @@ type CourseReview struct {
 type CourseReviewLike struct {
 	CourseReviewID uint `gorm:"primaryKey"`
 	UserID         uint `gorm:"primaryKey"`
+}
+
+const (
+	MaterialSource_BHPAN int = iota + 1 // 北航云盘
+	MaterialSource_BLOG                 // 博客
+)
+
+type CourseMaterial struct {
+	ID          uint   `gorm:"primaryKey;autoIncrement;not null"`
+	CourseID    string `gorm:"type:varchar(100);index;not null"`
+	UserID      uint   `gorm:"index;not null"`
+	Link        string `gorm:"type:varchar(1024);not null"` // 资料链接
+	Source      int    `gorm:"type:int;index"`
+	Description string `gorm:"type:text;not null"`
+	IsApproved  bool   `gorm:"default:false;not null"`
+	IsOfficial  bool   `gorm:"default:false;not null"`
+	LikeNum     int    `gorm:"default:0;index; not null"`
+	LikeVersion int    `gorm:"default:0;not null"` // 喜欢操作的乐观锁版本号
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
+}
+
+type CourseMaterialLike struct {
+	CourseMaterialID uint `gorm:"primaryKey"`
+	UserID           uint `gorm:"primaryKey"`
+}
+
+func (m *CourseMaterial) BeforeCreate(tx *gorm.DB) error {
+	if m.Source < 1 || m.Source > 2 {
+		return errors.New("invalid material source")
+	}
+	return nil
 }

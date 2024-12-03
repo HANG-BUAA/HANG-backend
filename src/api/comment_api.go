@@ -52,7 +52,7 @@ func (m CommentApi) Like(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	comment := c.MustGet("comment").(*model.Comment)
 	var commentLikeRequestDTO dto.CommentLikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentLikeRequestDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentLikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
 	commentLikeRequestDTO.User = user
@@ -77,7 +77,7 @@ func (m CommentApi) Unlike(c *gin.Context) {
 	user := c.MustGet("user").(*model.User)
 	comment := c.MustGet("comment").(*model.Comment)
 	var commentUnlikeRequestDTO dto.CommentUnlikeRequestDTO
-	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentUnlikeRequestDTO}).GetError(); err != nil {
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &commentUnlikeRequestDTO, BindParamsFromUri: true}).GetError(); err != nil {
 		return
 	}
 	commentUnlikeRequestDTO.User = user

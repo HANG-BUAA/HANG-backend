@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/viper"
+	"gorm.io/gorm"
 	"io"
 	"net/http"
 	"net/url"
@@ -57,7 +58,7 @@ func (m *CourseService) CreateCourse(requestDTO *dto.AdminCourseCreateRequestDTO
 	return
 }
 
-func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDTO) (res *dto.CreateCourseReviewResponseDTO, err error) {
+func (m *CourseService) CreateReview(requestDTO *dto.CourseReviewCreateRequestDTO) (res *dto.CourseReviewCreateResponseDTO, err error) {
 	user := requestDTO.User
 	courseID := requestDTO.CourseID
 	Content := requestDTO.Content
@@ -74,19 +75,11 @@ func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDT
 		return
 	}
 
-	// todo 用转换函数
-	res = &dto.CreateCourseReviewResponseDTO{
-		ID:        review.ID,
-		CourseID:  review.CourseID,
-		Content:   review.Content,
-		Score:     review.Score,
-		IsSelf:    true,
-		LikeNum:   0,
-		HasLiked:  false,
-		CreatedAt: review.CreatedAt,
-		UpdatedAt: review.UpdatedAt,
-		DeletedAt: review.DeletedAt,
+	overview, err := m.Dao.ConvertReviewModelToOverviewDTO(review, user)
+	if err != nil {
+		return
 	}
+	res = (*dto.CourseReviewCreateResponseDTO)(overview)
 
 	go func() {
 		err := utils.PublishCourseReviewMessage(utils.CourseReviewMessage{
@@ -101,7 +94,7 @@ func (m *CourseService) CreateReview(requestDTO *dto.CreateCourseReviewRequestDT
 	return
 }
 
-func (m *CourseService) LikeReview(requestDTO *dto.LikeCourseReviewRequestDTO) (err error) {
+func (m *CourseService) LikeReview(requestDTO *dto.CourseReviewLikeRequestDTO) (err error) {
 	user := requestDTO.User
 	courseReview := requestDTO.CourseReview
 
@@ -112,6 +105,45 @@ func (m *CourseService) LikeReview(requestDTO *dto.LikeCourseReviewRequestDTO) (
 
 	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
 		err = m.Dao.LikeReview(user, courseReview)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
+func (m *CourseService) UnlikeReview(requestDTO *dto.CourseReviewUnlikeRequestDTO) (err error) {
+	user := requestDTO.User
+	courseReview := requestDTO.CourseReview
+	if !m.Dao.CheckReviewLiked(user, courseReview) {
+		return errors.New("unliked review")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.UnlikeReview(user, courseReview)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, &custom_error.OptimisticLockError{}) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
+func (m *CourseService) UnlikeMaterial(requestDTO *dto.CourseMaterialUnlikeRequestDTO) (err error) {
+	user := requestDTO.User
+	courseMaterial := requestDTO.CourseMaterial
+
+	if !m.Dao.CheckMaterialLiked(user, courseMaterial) {
+		return errors.New("unliked material")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.UnlikeMaterial(user, courseMaterial)
 		if err == nil {
 			return
 		}
@@ -162,7 +194,11 @@ func (m *CourseService) CommonListReview(requestDTO *dto.CourseReviewListRequest
 	user := requestDTO.User
 	courseID := requestDTO.CourseID
 
-	// todo 检查课程是否存在
+	// 检查课程是否存在
+	_, err = m.Dao.GetCourseByID(courseID)
+	if err != nil {
+		return nil, err
+	}
 
 	var cursorLikeNum int
 	var cursorID uint
@@ -196,7 +232,7 @@ func (m *CourseService) CommonListReview(requestDTO *dto.CourseReviewListRequest
 
 	var nextCursor any
 	if isEnd {
-		nextCursor = 0
+		nextCursor = nil
 	} else {
 		nextCursor = fmt.Sprintf("%d %d", reviews[len(reviews)-1].LikeNum, reviews[len(reviews)-1].ID)
 	}
@@ -286,6 +322,97 @@ func (m *CourseService) Retrieve(requestDTO *dto.CourseRetrieveRequestDTO) (res 
 	}
 	res = &dto.CourseRetrieveResponseDTO{
 		Course: *overview,
+	}
+	return
+}
+
+func (m *CourseService) CreateMaterial(requestDTO *dto.CourseMaterialCreateRequestDTO) (res *dto.CourseMaterialCreateResponseDTO, err error) {
+	user := requestDTO.User
+	courseID := requestDTO.CourseID
+	link := requestDTO.Link
+	source := requestDTO.Source
+	description := requestDTO.Description
+
+	// 检查课程是否存在
+	_, err = m.Dao.GetCourseByID(courseID)
+	if err != nil {
+		return nil, err
+	}
+
+	material, err := m.Dao.CreateMaterial(user, courseID, link, description, source, false, false)
+	if err != nil {
+		return nil, err
+	}
+
+	overview, err := m.Dao.ConvertMaterialModelToOverviewDTO(material, user)
+	if err != nil {
+		return
+	}
+	res = (*dto.CourseMaterialCreateResponseDTO)(overview)
+	return
+}
+
+func (m *CourseService) LikeMaterial(requestDTO *dto.CourseMaterialLikeRequestDTO) (err error) {
+	user := requestDTO.User
+	courseMaterial := requestDTO.CourseMaterial
+
+	// 判断用户是否已经喜欢
+	if m.Dao.CheckMaterialLiked(user, courseMaterial) {
+		return errors.New("liked material")
+	}
+
+	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
+		err = m.Dao.LikeMaterial(user, courseMaterial)
+		if err == nil {
+			return
+		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			continue
+		}
+	}
+	return custom_error.NewOptimisticLockError()
+}
+
+func (m *CourseService) ListMaterial(requestDTO *dto.CourseMaterialListRequestDTO) (res *dto.CourseMaterialListResponseDTO, err error) {
+	pageSize := requestDTO.PageSize
+	user := requestDTO.User
+	courseID := requestDTO.CourseID
+	isOfficial := requestDTO.IsOfficial
+
+	// 检查课程是否存在
+	_, err = m.Dao.GetCourseByID(courseID)
+	if err != nil {
+		return
+	}
+
+	var cursorLikeNum int
+	var cursorID uint
+	cursor := new(struct {
+		LikeNum int
+		ID      uint
+	})
+	_, err = fmt.Sscanf(requestDTO.Cursor, "%d %d", &cursorLikeNum, &cursorID)
+	if err != nil {
+		cursor = nil
+	} else {
+		cursor.LikeNum = cursorLikeNum
+		cursor.ID = cursorID
+	}
+
+	materials, total, isEnd, err := m.Dao.ListMaterial(cursor, pageSize, courseID, *isOfficial)
+	if err != nil {
+		return
+	}
+
+	overviews, err := m.Dao.ConvertMaterialModelsToOverviews(materials, user)
+	if err != nil {
+		return
+	}
+	nextCursor := utils.IfThenElse(isEnd, nil, fmt.Sprintf("%d %d", materials[len(materials)-1].LikeNum, materials[len(materials)-1].ID))
+
+	res = &dto.CourseMaterialListResponseDTO{
+		Pagination: *dto.BuildPaginationInfo(total, len(materials), nextCursor),
+		Materials:  overviews,
 	}
 	return
 }

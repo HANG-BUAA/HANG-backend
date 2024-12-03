@@ -48,6 +48,18 @@ func (m *CourseDao) ConvertReviewModelsToOverviewDTOs(reviews []model.CourseRevi
 	return res, nil
 }
 
+func (m *CourseDao) ConvertMaterialModelsToOverviews(materials []model.CourseMaterial, user *model.User) ([]dto.CourseMaterialOverviewDTO, error) {
+	res := make([]dto.CourseMaterialOverviewDTO, 0)
+	for _, material := range materials {
+		tmp, err := m.ConvertMaterialModelToOverviewDTO(&material, user)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, *tmp)
+	}
+	return res, nil
+}
+
 func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.CourseOverviewDTO, error) {
 	// 查找 reviewNum
 	var reviewNum int64
@@ -55,6 +67,14 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 		Where("course_id = ?", course.ID).
 		Count(&reviewNum).
 		Error; err != nil {
+		return nil, err
+	}
+
+	// 查找课程资料数
+	var materialNum int64
+	if err := m.Orm.Model(&model.CourseMaterial{}).
+		Where("course_id = ?", course.ID).
+		Count(&materialNum).Error; err != nil {
 		return nil, err
 	}
 
@@ -84,6 +104,7 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 		Credits:      course.Credits,
 		Campus:       course.Campus,
 		ReviewNum:    int(reviewNum),
+		MaterialNum:  int(materialNum),
 		AverageScore: average,
 		Tags:         tags,
 		CreatedAt:    course.CreatedAt,
@@ -116,6 +137,47 @@ func (m *CourseDao) ConvertReviewModelToOverviewDTO(review *model.CourseReview, 
 		UpdatedAt: review.UpdatedAt,
 		DeletedAt: review.DeletedAt,
 	}, nil
+}
+
+func (m *CourseDao) ConvertMaterialModelToOverviewDTO(material *model.CourseMaterial, user *model.User) (*dto.CourseMaterialOverviewDTO, error) {
+	isSelf := material.UserID == user.ID
+
+	// 查找是否喜欢
+	hasLiked := true
+	if err := m.Orm.Model(&model.CourseMaterialLike{}).
+		Where("course_material_id = ? AND user_id = ?", material.ID, user.ID).
+		First(&model.CourseMaterialLike{}).
+		Error; err != nil {
+		hasLiked = false
+	}
+
+	res := dto.CourseMaterialOverviewDTO{
+		ID:          material.ID,
+		CourseID:    material.CourseID,
+		Link:        material.Link,
+		Source:      material.Source,
+		Description: material.Description,
+		IsOfficial:  material.IsOfficial,
+		IsApproved:  material.IsApproved,
+		LikeNum:     material.LikeNum,
+		HasLiked:    hasLiked,
+		IsSelf:      isSelf,
+		CreatedAt:   material.CreatedAt,
+		UpdatedAt:   material.UpdatedAt,
+		DeletedAt:   material.DeletedAt,
+	}
+
+	// 如果非官方的，查找用户信息
+	if !material.IsOfficial {
+		var author model.User
+		if err := m.Orm.Where("id = ?", material.UserID).First(&author).Error; err != nil {
+			return nil, err
+		}
+		res.Author.ID = author.ID
+		res.Author.Name = author.Username
+		res.Author.Avatar = author.Avatar
+	}
+	return &res, nil
 }
 
 func (m *CourseDao) CreateCourse(id, name string, credits *float32, campus *int, tags []model.Tag) (*model.Course, error) {
@@ -204,9 +266,48 @@ func (m *CourseDao) LikeReview(user *model.User, review *model.CourseReview) err
 	})
 }
 
+func (m *CourseDao) UnlikeReview(user *model.User, review *model.CourseReview) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		tx.Where("user_id = ? AND course_review_id = ?", user.ID, review.ID).Delete(&model.CourseReviewLike{})
+
+		result := tx.Model(&model.CourseReview{}).Where("id = ? AND like_version = ?", review.ID, review.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     review.LikeNum - 1,
+			"like_version": review.LikeVersion + 1,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
+}
+
+func (m *CourseDao) UnlikeMaterial(user *model.User, material *model.CourseMaterial) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		tx.Where("user_id = ? AND course_material_id = ?", user.ID, material.ID).Delete(&model.CourseMaterialLike{})
+
+		result := tx.Model(&model.CourseMaterial{}).Where("id = ? AND like_version = ?", material.ID, material.LikeVersion).Updates(map[string]interface{}{
+			"like_num":     material.LikeNum - 1,
+			"like_version": material.LikeVersion + 1,
+			"source":       material.Source,
+		})
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+		return nil
+	})
+}
+
 func (m *CourseDao) CheckReviewLiked(user *model.User, courseReview *model.CourseReview) bool {
 	var courseReviewLike model.CourseReviewLike
 	if err := m.Orm.Where("user_id = ? AND course_review_id = ?", user.ID, courseReview.ID).First(&courseReviewLike).Error; err != nil {
+		return false
+	}
+	return true
+}
+
+func (m *CourseDao) CheckMaterialLiked(user *model.User, courseMaterial *model.CourseMaterial) bool {
+	var courseMaterialLike model.CourseMaterialLike
+	if err := m.Orm.Where("user_id = ? AND course_material_id = ?", user.ID, courseMaterial.ID).First(&courseMaterialLike).Error; err != nil {
 		return false
 	}
 	return true
@@ -281,4 +382,80 @@ func (m *CourseDao) GetReviewsByIDs(ids []uint) ([]model.CourseReview, error) {
 		return nil, err
 	}
 	return reviews, nil
+}
+
+func (m *CourseDao) CreateMaterial(user *model.User, courseID, link, description string, source int, isApproved, isOfficial bool) (*model.CourseMaterial, error) {
+	courseMaterial := model.CourseMaterial{
+		CourseID:    courseID,
+		UserID:      user.ID,
+		Link:        link,
+		Description: description,
+		Source:      source,
+		IsApproved:  isApproved,
+		IsOfficial:  isOfficial,
+	}
+	if err := m.Orm.Create(&courseMaterial).Error; err != nil {
+		return nil, err
+	}
+	return &courseMaterial, nil
+}
+
+func (m *CourseDao) LikeMaterial(user *model.User, material *model.CourseMaterial) error {
+	return m.Orm.Transaction(func(tx *gorm.DB) error {
+		newMaterialLike := model.CourseMaterialLike{
+			UserID:           user.ID,
+			CourseMaterialID: material.ID,
+		}
+		if err := tx.Create(&newMaterialLike).Error; err != nil {
+			return err
+		}
+
+		// 动态维护
+		// 首先获取当前记录，确保Source字段正确 ———— beforeSave 钩子的问题
+		var existingMaterial model.CourseMaterial
+		if err := tx.Where("id = ?", material.ID).First(&existingMaterial).Error; err != nil {
+			return err // 处理错误，例如记录不存在的情况
+		}
+
+		// 确保使用有效的Source值
+		existingMaterial.LikeNum += 1
+		existingMaterial.LikeVersion += 1
+
+		// 执行更新
+		result := tx.Save(&existingMaterial)
+		if result.RowsAffected == 0 {
+			return custom_error.NewOptimisticLockError()
+		}
+
+		return nil
+	})
+}
+
+func (m *CourseDao) ListMaterial(cursor *struct {
+	LikeNum int
+	ID      uint
+}, pageSize int, courseID string, isOfficial bool) ([]model.CourseMaterial, int, bool, error) {
+	query := m.Orm.Model(&model.CourseMaterial{}).
+		Where("course_id = ? AND is_approved = ? AND is_official = ?", courseID, true, isOfficial)
+
+	// 计算总数
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, false, err
+	}
+
+	// 多查一条，判断是否有下一条记录
+	var courseMaterials []model.CourseMaterial
+	query = query.
+		Limit(pageSize + 1).
+		Order("like_num desc").
+		Order("id desc")
+	if cursor != nil {
+		query = query.Where("like_num < ?", cursor.LikeNum).Or("like_num = ? AND id < ?", cursor.ID, cursor.ID)
+	}
+	if err := query.Find(&courseMaterials).Error; err != nil {
+		return nil, 0, false, err
+	}
+	isEnd := len(courseMaterials) < pageSize+1
+	return courseMaterials[:utils.IfThenElse(isEnd, len(courseMaterials), pageSize).(int)], int(total), isEnd, nil
 }
