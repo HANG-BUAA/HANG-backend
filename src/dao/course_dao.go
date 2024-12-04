@@ -354,10 +354,6 @@ func (m *CourseDao) CommonListReview(cursor *struct {
 	query := m.Orm.Model(&model.CourseReview{}).
 		Where("course_id = ?", courseID)
 
-	if cursor != nil {
-		query = query.Where("like_num < ?", cursor.LikeNum).Or("like_num = ? AND id < ?", cursor.LikeNum, cursor.ID)
-	}
-
 	// 先计算总数
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
@@ -370,6 +366,10 @@ func (m *CourseDao) CommonListReview(cursor *struct {
 		Limit(pageSize + 1).
 		Order("like_num desc").
 		Order("id desc")
+
+	if cursor != nil {
+		query = query.Where("like_num < ?", cursor.LikeNum).Or("like_num = ? AND id < ?", cursor.LikeNum, cursor.ID)
+	}
 
 	if err := query.Find(&coursesReviews).Error; err != nil {
 		return nil, 0, false, err
