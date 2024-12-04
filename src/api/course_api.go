@@ -1,6 +1,7 @@
 package api
 
 import (
+	"HANG-backend/src/global"
 	"HANG-backend/src/model"
 	"HANG-backend/src/service"
 	"HANG-backend/src/service/dto"
@@ -268,4 +269,32 @@ func (m CourseApi) ListMaterial(c *gin.Context) {
 		Data: *materials,
 	})
 
+}
+
+func (m CourseApi) ListTags(c *gin.Context) {
+	type TagCountResponse struct {
+		ID    uint   `json:"id"`
+		Name  string `json:"name"`
+		Count int    `json:"count"`
+	}
+	var tags []TagCountResponse
+	m.Ctx = c
+
+	// 使用gorm的LeftJoin查询，将标签与课程数量关联
+	err := global.RDB.Table("tag"). // 确保表名是单数形式
+					Select("tag.id as id, tag.name as name, COUNT(course_tag.course_id) as count").
+					Joins("LEFT JOIN course_tag ON course_tag.tag_id = tag.id").
+					Group("tag.id").
+					Order("count DESC").
+					Scan(&tags).Error
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	m.OK(ResponseJson{
+		Data: tags,
+	})
 }
