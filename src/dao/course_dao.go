@@ -368,7 +368,8 @@ func (m *CourseDao) CommonListReview(cursor *struct {
 		Order("id desc")
 
 	if cursor != nil {
-		query = query.Where("like_num < ?", cursor.LikeNum).Or("like_num = ? AND id < ?", cursor.LikeNum, cursor.ID)
+		query = query.Where("like_num < ? AND course_id = ?", cursor.LikeNum, courseID).
+			Or("like_num = ? AND id < ? AND course_id = ?", cursor.LikeNum, cursor.ID, courseID)
 	}
 
 	if err := query.Find(&coursesReviews).Error; err != nil {
