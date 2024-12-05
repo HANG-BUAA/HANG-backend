@@ -31,6 +31,7 @@ func InitCourseRoutes() {
 		{
 			rgAdminCourse.POST("", middleware.Permission(permission.CreateCourse), courseApi.CreateCourse)
 			rgAdminCourse.POST("/excel", middleware.Permission(permission.CreateCourse), courseApi.CreateCoursesByExcel)
+			rgAdminCourse.PUT("/materials/:material_id/approve", middleware.Permission(permission.ApproveMaterial), courseApi.ApproveMaterial)
 		}
 	})
 }

@@ -76,15 +76,15 @@ func (m *UserService) Register(userRegisterRequestDTO *dto.UserRegisterRequestDT
 
 	// 检查验证码是否正确
 	studentID := userRegisterRequestDTO.StudentID
-	containedCode, tmpErr := utils.GetRedis(studentID + "_verification")
-	if tmpErr != nil {
-		err = errors.New("verification code expired")
-		return
-	}
-	if containedCode != userRegisterRequestDTO.VerificationCode {
-		err = errors.New("verification code expired")
-		return
-	}
+	//containedCode, tmpErr := utils.GetRedis(studentID + "_verification")
+	//if tmpErr != nil {
+	//	err = errors.New("verification code expired")
+	//	return
+	//}
+	//if containedCode != userRegisterRequestDTO.VerificationCode {
+	//	err = errors.New("verification code expired")
+	//	return
+	//}
 	user, err := m.Dao.AddUser(studentID, userRegisterRequestDTO.Password, permission.User)
 	if err != nil {
 		return

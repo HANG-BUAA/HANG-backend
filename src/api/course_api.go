@@ -8,6 +8,7 @@ import (
 	"HANG-backend/src/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
+	"strconv"
 )
 
 type CourseApi struct {
@@ -394,5 +395,52 @@ func (m CourseApi) CreateCoursesByExcel(c *gin.Context) {
 	}
 	m.OK(ResponseJson{
 		Data: res,
+	})
+}
+
+func (m CourseApi) ApproveMaterial(c *gin.Context) {
+	m.Ctx = c
+	materialIDStr := c.Param("material_id") // 获取路径参数 material_id
+	if materialIDStr == "" {
+		m.Fail(ResponseJson{
+			Msg: "material_id is required",
+		})
+		return
+	}
+	materialID, err := strconv.Atoi(materialIDStr)
+	if err != nil || materialID <= 0 {
+		m.Fail(ResponseJson{
+			Msg: "material_id is invalid",
+		})
+		return
+	}
+
+	var material model.CourseMaterial
+	if err := global.RDB.Where("id = ?", materialID).First(&material).Error; err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	// 判断 IsApproved 是否已经是 true
+	if material.IsApproved {
+		m.Fail(ResponseJson{
+			Msg: "material is already approved",
+		})
+		return
+	}
+
+	// 更新 IsApproved 为 true
+	material.IsApproved = true
+	if err := global.RDB.Save(&material).Error; err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	m.OK(ResponseJson{
+		Data: material,
 	})
 }
