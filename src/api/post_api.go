@@ -8,6 +8,7 @@ import (
 	"HANG-backend/src/service/dto"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type PostApi struct {
@@ -229,5 +230,43 @@ func (m PostApi) Retrieve(c *gin.Context) {
 	}
 	m.OK(ResponseJson{
 		Data: *postOverview,
+	})
+}
+
+func (m PostApi) DeletePost(c *gin.Context) {
+	m.Ctx = c
+	postIDStr := c.Param("post_id")
+	if postIDStr == "" {
+		m.Fail(ResponseJson{
+			Msg: "post_id is Required",
+		})
+		return
+	}
+
+	postID, err := strconv.Atoi(postIDStr)
+	if err != nil || postID <= 0 {
+		m.Fail(ResponseJson{
+			Msg: "post_id is Invalid",
+		})
+		return
+	}
+	var post model.Post
+	if err := global.RDB.Model(&model.Post{}).Where("id = ?", postID).First(&post).Error; err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	if err := global.RDB.Where("id = ?", postID).Delete(&post).Error; err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"status": "delete success",
+		},
 	})
 }

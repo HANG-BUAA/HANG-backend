@@ -24,5 +24,9 @@ func InitPostRoutes() {
 			rgAuthPost.GET("", middleware.CheckPaginationParams(), postApi.List)
 			rgAuthPost.GET("/collections", middleware.CheckPaginationParams(), postApi.CollectionList)
 		}
+		rgAdminPost := rgAdmin.Group("/posts")
+		{
+			rgAdminPost.DELETE("/:post_id", middleware.Permission(permission.DeletePost), postApi.DeletePost)
+		}
 	})
 }
