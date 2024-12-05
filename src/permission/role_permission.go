@@ -43,6 +43,7 @@ const (
 	CreateTag                            // 创建标签
 	ReviewCourse                         // 评论课程
 	UploadMaterial                       // 上传资料
+	DeletePost                           // 删帖
 )
 
 var Permissions = []PermissionWeight{
@@ -55,6 +56,7 @@ var Permissions = []PermissionWeight{
 	{CreateTag, "创建标签", 7000},
 	{ReviewCourse, "评论课程", 1000},
 	{UploadMaterial, "上传课程资料", 1000},
+	{DeletePost, "删帖", 7000},
 }
 
 var userPermissions = []Permission{
@@ -72,6 +74,7 @@ var adminPermissions = []Permission{
 	CreateTag,
 	ReviewCourse,
 	UploadMaterial,
+	DeletePost,
 }
 
 var superAdminPermissions = []Permission{
@@ -83,6 +86,7 @@ var superAdminPermissions = []Permission{
 	CreateTag,
 	ReviewCourse,
 	UploadMaterial,
+	DeletePost,
 }
 
 var rolePermissionMap = map[Role][]Permission{

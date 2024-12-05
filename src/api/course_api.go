@@ -5,7 +5,9 @@ import (
 	"HANG-backend/src/model"
 	"HANG-backend/src/service"
 	"HANG-backend/src/service/dto"
+	"HANG-backend/src/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 )
 
 type CourseApi struct {
@@ -296,5 +298,101 @@ func (m CourseApi) ListTags(c *gin.Context) {
 
 	m.OK(ResponseJson{
 		Data: tags,
+	})
+}
+
+func (m CourseApi) CreateCoursesByExcel(c *gin.Context) {
+	type ExcelRow struct {
+		ID      string   `json:"id"`
+		Name    string   `json:"name"`
+		Credits *float32 `json:"credits"`
+		Campus  *int     `json:"campus"`
+		Tags    []uint   `json:"tags"`
+	}
+	m.Ctx = c
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	// 数据在第一个工作表中
+	sheetName := f.GetSheetName(0)
+
+	// 读取所有行数据（第一行是表头）
+	rows, err := f.Rows(sheetName)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	var data []ExcelRow
+
+	// 跳过表头（假设第一行是表头）
+	rowIndex := 0
+	for rows.Next() {
+		rowIndex++
+		if rowIndex == 1 {
+			// 第一行是表头，跳过
+			continue
+		}
+
+		// 获取每一行的单元格数据
+		columns, err := rows.Columns()
+		if err != nil {
+			m.Fail(ResponseJson{
+				Msg: err.Error(),
+			})
+			return
+		}
+
+		// 解析数据
+		credits := utils.ParseFloat32(columns[2])
+		campus := utils.ParseInt(columns[3])
+		tags := utils.ParseTags(columns[4])
+
+		// 构造数据对象
+		excelRow := ExcelRow{
+			ID:      columns[0],
+			Name:    columns[1],
+			Credits: credits,
+			Campus:  campus,
+			Tags:    tags,
+		}
+
+		// 添加到结果集
+		data = append(data, excelRow)
+	}
+	var res []dto.AdminCourseCreateResponseDTO
+	for _, row := range data {
+		requestDTO := dto.AdminCourseCreateRequestDTO{
+			ID:      row.ID,
+			Name:    row.Name,
+			Credits: row.Credits,
+			Campus:  row.Campus,
+			Tags:    row.Tags,
+		}
+		responseDTO, err := m.Service.CreateCourse(&requestDTO)
+		if err != nil {
+			m.Fail(ResponseJson{
+				Msg: err.Error(),
+			})
+			return
+		}
+		res = append(res, *responseDTO)
+	}
+	m.OK(ResponseJson{
+		Data: res,
 	})
 }

@@ -30,6 +30,7 @@ func InitCourseRoutes() {
 		rgAdminCourse := rgAdminGroup.Group("/courses")
 		{
 			rgAdminCourse.POST("", middleware.Permission(permission.CreateCourse), courseApi.CreateCourse)
+			rgAdminCourse.POST("/excel", middleware.Permission(permission.CreateCourse), courseApi.CreateCoursesByExcel)
 		}
 	})
 }
