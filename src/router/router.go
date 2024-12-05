@@ -38,6 +38,7 @@ func InitRouter() {
 	defer cancelCtx()
 
 	r := gin.Default()
+	r.Static("images", "images")        // 静态资源
 	r.Use(middleware.Cors())            // 挂载跨域中间件
 	r.Use(middleware.AccessLogRecord()) // 访问日志中间件
 	pingApi := api.NewPingApi()         // 测试连通接口
