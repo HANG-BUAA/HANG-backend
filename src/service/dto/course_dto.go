@@ -118,6 +118,7 @@ type CourseRetrieveResponseDTO struct {
 
 type CourseMaterialCreateRequestDTO struct {
 	User        *model.User
+	IsOfficial  bool   `json:"is_official"`
 	CourseID    string `json:"course_id" form:"course_id" binding:"required" required_err:"course_id is Required"`
 	Link        string `json:"link" form:"link" binding:"required" required_err:"link is Required"`
 	Source      int    `json:"source" form:"source" binding:"required" required_err:"source is Required"`

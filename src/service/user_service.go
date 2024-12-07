@@ -58,6 +58,7 @@ func (m *UserService) Login(userLoginRequestDTO *dto.UserLoginRequestDTO) (res *
 		ID:        user.ID,
 		Token:     token,
 		StudentID: user.StudentID,
+		Avatar:    user.Avatar,
 		Username:  user.Username,
 		Role:      user.Role,
 		CreatedAt: user.CreatedAt,

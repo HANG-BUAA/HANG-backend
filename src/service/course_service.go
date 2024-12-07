@@ -332,6 +332,7 @@ func (m *CourseService) CreateMaterial(requestDTO *dto.CourseMaterialCreateReque
 	link := requestDTO.Link
 	source := requestDTO.Source
 	description := requestDTO.Description
+	isOfficial := requestDTO.IsOfficial
 
 	// 检查课程是否存在
 	_, err = m.Dao.GetCourseByID(courseID)
@@ -339,7 +340,7 @@ func (m *CourseService) CreateMaterial(requestDTO *dto.CourseMaterialCreateReque
 		return nil, err
 	}
 
-	material, err := m.Dao.CreateMaterial(user, courseID, link, description, source, false, false)
+	material, err := m.Dao.CreateMaterial(user, courseID, link, description, source, false, isOfficial)
 	if err != nil {
 		return nil, err
 	}

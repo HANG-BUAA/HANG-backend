@@ -15,6 +15,7 @@ type UserLoginResponseDTO struct {
 	ID        uint           `json:"id"`
 	Username  string         `json:"username"`
 	StudentID string         `json:"student_id"`
+	Avatar    string         `json:"avatar"`
 	Role      uint           `json:"role"`
 	Token     string         `json:"token"`
 	CreatedAt time.Time      `json:"created_at"`
