@@ -103,6 +103,7 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 		Name:         course.Name,
 		Credits:      course.Credits,
 		Campus:       course.Campus,
+		Description:  course.Description,
 		ReviewNum:    int(reviewNum),
 		MaterialNum:  int(materialNum),
 		AverageScore: average,
@@ -180,12 +181,13 @@ func (m *CourseDao) ConvertMaterialModelToOverviewDTO(material *model.CourseMate
 	return &res, nil
 }
 
-func (m *CourseDao) CreateCourse(id, name string, credits *float32, campus *int, tags []model.Tag) (*model.Course, error) {
+func (m *CourseDao) CreateCourse(id, name string, credits *float32, campus *int, tags []model.Tag, description string) (*model.Course, error) {
 	course := model.Course{
-		ID:      id,
-		Name:    name,
-		Credits: credits,
-		Campus:  campus,
+		ID:          id,
+		Name:        name,
+		Credits:     credits,
+		Campus:      campus,
+		Description: description,
 	}
 
 	// 使用数据库事务

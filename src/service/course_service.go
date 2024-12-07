@@ -39,6 +39,7 @@ func (m *CourseService) CreateCourse(requestDTO *dto.AdminCourseCreateRequestDTO
 	credits := requestDTO.Credits
 	campus := requestDTO.Campus
 	tagIDs := requestDTO.Tags
+	description := requestDTO.Description
 
 	// 检查 tags 合法性
 	tags, err := m.Dao.ListTagsByIDs(tagIDs)
@@ -46,7 +47,7 @@ func (m *CourseService) CreateCourse(requestDTO *dto.AdminCourseCreateRequestDTO
 		return nil, err
 	}
 
-	course, err := m.Dao.CreateCourse(id, name, credits, campus, tags)
+	course, err := m.Dao.CreateCourse(id, name, credits, campus, tags, description)
 	if err != nil {
 		return
 	}

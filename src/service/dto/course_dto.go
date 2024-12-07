@@ -24,6 +24,7 @@ type CourseOverviewDTO struct {
 	Name         string         `json:"name"`
 	Credits      *float32       `json:"credits"`
 	Campus       *int           `json:"campus"`
+	Description  string         `json:"description"`
 	ReviewNum    int            `json:"review_num"`
 	MaterialNum  int            `json:"material_num"`
 	AverageScore *float64       `json:"average_score"`
@@ -55,11 +56,12 @@ type CourseMaterialOverviewDTO struct {
 }
 
 type AdminCourseCreateRequestDTO struct {
-	ID      string   `json:"id" form:"id" binding:"required" required_err:"id is Required"`
-	Name    string   `json:"name" form:"name" binding:"required" required_err:"name is Required"`
-	Credits *float32 `json:"credits" form:"credits"`
-	Campus  *int     `json:"campus" form:"campus"`
-	Tags    []uint   `json:"tags" form:"tags"`
+	ID          string   `json:"id" form:"id" binding:"required" required_err:"id is Required"`
+	Name        string   `json:"name" form:"name" binding:"required" required_err:"name is Required"`
+	Credits     *float32 `json:"credits" form:"credits"`
+	Campus      *int     `json:"campus" form:"campus"`
+	Description string   `json:"description"`
+	Tags        []uint   `json:"tags" form:"tags"`
 }
 
 type AdminCourseCreateResponseDTO CourseOverviewDTO
