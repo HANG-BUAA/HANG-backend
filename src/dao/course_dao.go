@@ -73,7 +73,7 @@ func (m *CourseDao) ConvertCourseModelToOverviewDTO(course *model.Course) (*dto.
 	// 查找课程资料数
 	var materialNum int64
 	if err := m.Orm.Model(&model.CourseMaterial{}).
-		Where("course_id = ?", course.ID).
+		Where("course_id = ? AND is_approved = ?", course.ID, true).
 		Count(&materialNum).Error; err != nil {
 		return nil, err
 	}
