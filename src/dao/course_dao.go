@@ -439,9 +439,9 @@ func (m *CourseDao) LikeMaterial(user *model.User, material *model.CourseMateria
 func (m *CourseDao) ListMaterial(cursor *struct {
 	LikeNum int
 	ID      uint
-}, pageSize int, courseID string, isOfficial bool) ([]model.CourseMaterial, int, bool, error) {
+}, pageSize int, courseID string, isOfficial bool, isApproved bool) ([]model.CourseMaterial, int, bool, error) {
 	query := m.Orm.Model(&model.CourseMaterial{}).
-		Where("course_id = ? AND is_approved = ? AND is_official = ?", courseID, true, isOfficial)
+		Where("course_id = ? AND is_approved = ? AND is_official = ?", courseID, isApproved, isOfficial)
 
 	// 计算总数
 	var total int64

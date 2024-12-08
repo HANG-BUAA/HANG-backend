@@ -380,6 +380,11 @@ func (m *CourseService) ListMaterial(requestDTO *dto.CourseMaterialListRequestDT
 	user := requestDTO.User
 	courseID := requestDTO.CourseID
 	isOfficial := requestDTO.IsOfficial
+	isApproved := requestDTO.IsApproved
+	if isApproved == nil {
+		tmp := false
+		isApproved = &tmp
+	}
 
 	// 检查课程是否存在
 	_, err = m.Dao.GetCourseByID(courseID)
@@ -401,7 +406,7 @@ func (m *CourseService) ListMaterial(requestDTO *dto.CourseMaterialListRequestDT
 		cursor.ID = cursorID
 	}
 
-	materials, total, isEnd, err := m.Dao.ListMaterial(cursor, pageSize, courseID, *isOfficial)
+	materials, total, isEnd, err := m.Dao.ListMaterial(cursor, pageSize, courseID, *isOfficial, *isApproved)
 	if err != nil {
 		return
 	}
