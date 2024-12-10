@@ -4,6 +4,7 @@ import (
 	"HANG-backend/src/custom_error"
 	"HANG-backend/src/dao"
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
 	"encoding/json"
@@ -428,4 +429,16 @@ func (m *CourseService) ListMaterial(requestDTO *dto.CourseMaterialListRequestDT
 		Materials:  overviews,
 	}
 	return
+}
+
+func (m *CourseService) ListUnApprovedMaterial(user *model.User) ([]dto.CourseMaterialOverviewDTO, error) {
+	var materials []model.CourseMaterial
+	if err := global.RDB.Where("is_approved = ?", false).Find(&materials).Error; err != nil {
+		return nil, err
+	}
+	ovs, err := m.Dao.ConvertMaterialModelsToOverviews(materials, user)
+	if err != nil {
+		return nil, err
+	}
+	return ovs, nil
 }

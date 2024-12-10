@@ -271,7 +271,21 @@ func (m CourseApi) ListMaterial(c *gin.Context) {
 	m.OK(ResponseJson{
 		Data: *materials,
 	})
+}
 
+func (m CourseApi) ListUnApprovedMaterial(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	m.Ctx = c
+	material, err := m.Service.ListUnApprovedMaterial(user)
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+	m.OK(ResponseJson{
+		Data: material,
+	})
 }
 
 func (m CourseApi) ListTags(c *gin.Context) {
