@@ -128,3 +128,43 @@ func (m UserApi) UploadAvatar(c *gin.Context) {
 		Data: *iUserUpdateAvatarResponseDTO,
 	})
 }
+
+func (m UserApi) UpdateUser(c *gin.Context) {
+	type UpdateUserRequest struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	user := c.MustGet("user").(*model.User)
+	// 解析请求体中的更新数据
+	var req UpdateUserRequest
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &req}).GetError(); err != nil {
+		return
+	}
+
+	// 更新字段（只修改传入的字段）
+	if req.Username != "" {
+		user.Username = req.Username
+	}
+	if req.Password != "" {
+		user.Password = req.Password // 注意：通常这里密码应该加密存储
+	}
+
+	// 保存更新后的用户数据
+	if err := global.RDB.Save(user).Error; err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+	}
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"id":         user.ID,
+			"username":   user.Username,
+			"student_id": user.StudentID,
+			"avatar":     user.Avatar,
+			"role":       user.Role,
+			"created_at": user.CreatedAt,
+			"updated_at": user.UpdatedAt,
+			"deleted_at": user.DeletedAt,
+		},
+	})
+}

@@ -17,6 +17,7 @@ func InitUserRoutes() {
 		rgAuthUser := rgAuth.Group("/users")
 		{
 			rgAuthUser.PUT("/update-avatar", userApi.UploadAvatar)
+			rgAuthUser.PUT("", userApi.UpdateUser)
 		}
 		//rgAdminUser := rgAdmin.Group("/users")
 		//{
