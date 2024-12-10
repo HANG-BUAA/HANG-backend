@@ -4,6 +4,7 @@ import (
 	"HANG-backend/src/custom_error"
 	"HANG-backend/src/dao"
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
 	"HANG-backend/src/service/dto"
 	"errors"
 	"strconv"
@@ -47,6 +48,24 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 	if err != nil {
 		return nil, err
 	}
+
+	notification := model.Notification{
+		Type:           "reply",
+		OperatorID:     user.ID,
+		OperatorName:   user.Username,
+		OperatorAvatar: user.Avatar,
+	}
+	if *replyCommentID == 0 {
+		notification.NotifierID = post.UserID
+		notification.EntityID = post.ID
+	} else {
+		var targetComment model.Comment
+		global.RDB.First(&targetComment, *replyCommentID)
+		notification.NotifierID = targetComment.UserID
+		notification.EntityID = targetComment.ID
+	}
+	global.RDB.Create(&notification)
+
 	res = (*dto.CommentCreateResponseDTO)(tmp)
 	return
 }
@@ -64,6 +83,15 @@ func (m *CommentService) Like(commentLikeRequestDTO *dto.CommentLikeRequestDTO) 
 	for retries := 0; retries < global.OptimisticLockMaxRetries; retries++ {
 		err = m.Dao.Like(user, comment)
 		if err == nil {
+			notification := model.Notification{
+				Type:           "like comment",
+				OperatorID:     user.ID,
+				OperatorName:   user.Username,
+				OperatorAvatar: user.Avatar,
+				NotifierID:     comment.UserID,
+				EntityID:       comment.ID,
+			}
+			global.RDB.Create(&notification)
 			return
 		}
 

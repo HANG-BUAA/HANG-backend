@@ -168,3 +168,62 @@ func (m UserApi) UpdateUser(c *gin.Context) {
 		},
 	})
 }
+
+func (m UserApi) ListNotification(c *gin.Context) {
+	// 获取请求的查询参数
+	var query struct {
+		NotifierID uint   `form:"notifier_id"`
+		Type       string `form:"type"`
+		Page       int    `form:"page" binding:"required"`
+		PageSize   int    `form:"page_size" binding:"required"`
+	}
+	if err := m.BuildRequest(BuildRequestOption{Ctx: c, DTO: &query}).GetError(); err != nil {
+		return
+	}
+	user := c.MustGet("user").(*model.User)
+	query.NotifierID = user.ID
+	// 定义查询条件
+	notifierID := query.NotifierID
+	notificationType := query.Type
+	page := query.Page
+	pageSize := query.PageSize
+
+	// 构建查询
+	var notifications []model.Notification
+	var totalCount int64
+
+	// 使用 global.RDB 作为数据库实例进行查询
+	db := global.RDB
+
+	// 1. 基本查询条件：根据 NotifierID 筛选
+	queryBuilder := db.Model(&model.Notification{}).Where("notifier_id = ?", notifierID)
+
+	// 2. 如果传入了 Type，添加类型筛选
+	if notificationType != "" {
+		queryBuilder = queryBuilder.Where("type = ?", notificationType)
+	}
+
+	// 3. 获取总记录数
+	err := queryBuilder.Count(&totalCount).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count notifications"})
+		return
+	}
+
+	// 4. 执行分页查询
+	err = queryBuilder.Offset((page - 1) * pageSize).Limit(pageSize).Find(&notifications).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications"})
+		return
+	}
+
+	// 5. 返回响应
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"total_count":   totalCount,
+			"page":          page,
+			"page_size":     pageSize,
+			"notifications": notifications,
+		},
+	})
+}

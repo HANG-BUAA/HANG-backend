@@ -4,6 +4,7 @@ import (
 	"HANG-backend/src/custom_error"
 	"HANG-backend/src/dao"
 	"HANG-backend/src/global"
+	"HANG-backend/src/model"
 	"HANG-backend/src/service/dto"
 	"HANG-backend/src/utils"
 	"encoding/json"
@@ -81,6 +82,15 @@ func (m *PostService) Like(postLikeRequestDTO *dto.PostLikeRequestDTO) (err erro
 		err = m.Dao.Like(user, post)
 		if err == nil {
 			// 喜欢成功
+			notification := model.Notification{
+				Type:           "like post",
+				OperatorID:     user.ID,
+				OperatorName:   user.Username,
+				OperatorAvatar: user.Avatar,
+				NotifierID:     post.UserID,
+				EntityID:       post.ID,
+			}
+			global.RDB.Create(&notification)
 			return
 		}
 
@@ -128,6 +138,16 @@ func (m *PostService) Collect(postCollectRequestDTO *dto.PostCollectRequestDTO) 
 		err = m.Dao.Collect(user, post)
 		if err == nil {
 			// 收藏成功
+			notification := model.Notification{
+				Type:           "collect post",
+				OperatorID:     user.ID,
+				OperatorName:   user.Username,
+				OperatorAvatar: user.Avatar,
+				NotifierID:     post.UserID,
+				EntityID:       post.ID,
+			}
+			global.RDB.Create(&notification)
+
 			return
 		}
 
