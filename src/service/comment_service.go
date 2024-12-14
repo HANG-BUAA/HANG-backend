@@ -62,7 +62,8 @@ func (m *CommentService) Create(commentCreateDTO *dto.CommentCreateRequestDTO) (
 		var targetComment model.Comment
 		global.RDB.First(&targetComment, *replyCommentID)
 		notification.NotifierID = targetComment.UserID
-		notification.EntityID = targetComment.ID
+		//notification.EntityID = targetComment.ID
+		notification.EntityID = post.ID
 	}
 	global.RDB.Create(&notification)
 
