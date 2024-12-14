@@ -17,6 +17,9 @@ func Start() {
 	// 初始化日志组件
 	global.Logger = config.InitLogger()
 
+	// 初始化百度apikey
+	utils.InitKey()
+
 	// 初始化数据库连接
 	db, err := config.InitDB()
 	global.RDB = db

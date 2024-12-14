@@ -78,6 +78,7 @@ func InitRouter() {
 
 	go func() {
 		global.Logger.Infof("Start Listen: %s", port)
+		//utils.SetKeyword("对了，之前北京高校联谊给我匹配了个北京林业大学的女孩子，她找我聊天的那天我整天都在写编译实验（代码优化）和数据库大作业，我还记得我的图着色和API接口写的有问题，一天来不及吃饭，我在想如果那天和她聊下去会怎么样。")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			global.Logger.Error("Start Server Error: %s", err.Error())
 			return
@@ -102,6 +103,7 @@ func initBasePlatformRoutes() {
 	InitCourseRoutes()
 	InitTagRoutes()
 	InitChatRoutes()
+	InitLogRoutes()
 }
 
 // 自定义校验器

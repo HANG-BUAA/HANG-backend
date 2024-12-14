@@ -91,7 +91,7 @@ func (m ChatApi) ListMessage(c *gin.Context) {
 	// 查询聊天记录
 	err = global.RDB.
 		Where("(sender_id =? AND receiver_id =?) OR (sender_id =? AND receiver_id =?)", senderID, receiverID, receiverID, senderID).
-		Order("created_at DESC"). // 按时间升序排列
+		Order("created_at DESC").                      // 按时间升序排列
 		Offset((page - 1) * pageSize).Limit(pageSize). // 分页
 		Find(&messages).Error
 	if err != nil {

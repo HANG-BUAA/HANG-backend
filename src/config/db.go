@@ -3,6 +3,7 @@ package config
 import (
 	"HANG-backend/src/api"
 	"HANG-backend/src/model"
+	"HANG-backend/src/utils"
 	"fmt"
 	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
@@ -62,6 +63,7 @@ func InitDB() (*gorm.DB, error) {
 		&model.CourseMaterialLike{},
 		&model.Notification{},
 		&api.ChatMessage{},
+		utils.Keyword{},
 	); err != nil {
 		return nil, err
 	}

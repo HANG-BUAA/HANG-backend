@@ -53,6 +53,9 @@ func (m *PostService) Create(postCreateDTO *dto.PostCreateRequestDTO) (res *dto.
 	}
 	res = (*dto.PostCreateResponseDTO)(tmp)
 
+	// 传输关键词数据
+	go utils.SetKeyword(content)
+
 	// 创建协程，异步地将数据传输到 rabbitmq中，进而同步到 es 里
 	go func() {
 		err := utils.PublishPostMessage(utils.PostMessage{
