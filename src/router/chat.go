@@ -16,6 +16,7 @@ func InitChatRoutes() {
 			rgAuthChat.POST("/messages", chatApi.CreateMessage)
 			rgAuthChat.GET("/messages", chatApi.ListMessage)
 			rgAuthChat.GET("/poll", chatApi.LongPollingNewMessages)
+			rgAuthChat.GET("/friends", chatApi.ListFriends)
 		}
 	})
 }

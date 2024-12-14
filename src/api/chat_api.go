@@ -4,6 +4,7 @@ import (
 	"HANG-backend/src/global"
 	"HANG-backend/src/model"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"strconv"
 	"time"
 )
@@ -11,11 +12,12 @@ import (
 // -------------- model ----------------
 
 type ChatMessage struct {
-	ID         uint      `gorm:"primaryKey;autoIncrement; not null"`
-	SenderID   uint      `gorm:"index; not null"`
-	ReceiverID uint      `gorm:"index; not null"`
-	Content    string    `gorm:"type:text; not null"`
-	CreatedAt  time.Time `gorm:"index"`
+	ID         uint           `gorm:"primaryKey;autoIncrement; not null"`
+	SenderID   uint           `gorm:"index; not null"`
+	ReceiverID uint           `gorm:"index; not null"`
+	Content    string         `gorm:"type:text; not null"`
+	CreatedAt  time.Time      `gorm:"index"`
+	DeletedAt  gorm.DeletedAt `gorm:"index"`
 }
 
 type ChatApi struct {
@@ -182,4 +184,53 @@ func (m ChatApi) LongPollingNewMessages(c *gin.Context) {
 		}
 		time.Sleep(time.Millisecond * 500) // 短暂休眠后再次检查是否有新消息
 	}
+}
+
+type UserDetail struct {
+	ID        uint   `json:"id"`
+	Username  string `json:"username"`
+	StudentID string `json:"student_id"`
+	Avatar    string `json:"avatar"`
+}
+
+func (m ChatApi) ListFriends(c *gin.Context) {
+	m.Ctx = c
+	sender := c.MustGet("user").(*model.User)
+	senderID := sender.ID
+
+	var chattedUsers []uint
+	// 使用子查询和DISTINCT关键字找出所有和当前用户聊过天的不同用户
+	err := global.RDB.Table("chat_message").
+		Select("DISTINCT CASE WHEN sender_id =? THEN receiver_id ELSE sender_id END as user_id", senderID).
+		Where("sender_id =? OR receiver_id =?", senderID, senderID).
+		Find(&chattedUsers).Error
+	if err != nil {
+		m.Fail(ResponseJson{
+			Msg: err.Error(),
+		})
+		return
+	}
+
+	var res []UserDetail
+	for _, userID := range chattedUsers {
+		var user model.User
+		if err := global.RDB.Where("id = ?", userID).Find(&user).Error; err != nil {
+			m.Fail(ResponseJson{
+				Msg: err.Error(),
+			})
+			return
+		}
+		res = append(res, UserDetail{
+			ID:        user.ID,
+			Username:  user.Username,
+			Avatar:    user.Avatar,
+			StudentID: user.StudentID,
+		})
+	}
+
+	m.OK(ResponseJson{
+		Data: gin.H{
+			"users": res,
+		},
+	})
 }
