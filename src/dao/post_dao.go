@@ -219,7 +219,7 @@ func (m *PostDao) CheckCollected(user *model.User, post *model.Post) bool {
 
 func (m *PostDao) getPostUserNameAndAvatar(post *model.Post) (string, string, error) {
 	if post.IsAnonymous {
-		return "洞主", "匿名的头像，还没想好", nil
+		return "洞主", "", nil
 	}
 	var user model.User
 	if err := m.Orm.Where("id = ?", post.UserID).First(&user).Error; err != nil {

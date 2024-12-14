@@ -189,7 +189,7 @@ func (m *CommentDao) getCommentUserName(comment *model.Comment) (string, error) 
 
 func (m *CommentDao) getCommentUserNameAndAvatar(comment *model.Comment) (string, string, error) {
 	if comment.IsAnonymous {
-		return comment.UserName, "匿名的头像的路径，还没想好", nil
+		return comment.UserName, "", nil
 	}
 	var user model.User
 	if err := m.Orm.Where("id = ?", comment.UserID).First(&user).Error; err != nil {

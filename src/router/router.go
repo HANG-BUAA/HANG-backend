@@ -101,6 +101,7 @@ func initBasePlatformRoutes() {
 	InitCommentRoutes()
 	InitCourseRoutes()
 	InitTagRoutes()
+	InitChatRoutes()
 }
 
 // 自定义校验器

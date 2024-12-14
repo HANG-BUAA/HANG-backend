@@ -1,6 +1,7 @@
 package config
 
 import (
+	"HANG-backend/src/api"
 	"HANG-backend/src/model"
 	"fmt"
 	"github.com/spf13/viper"
@@ -60,6 +61,7 @@ func InitDB() (*gorm.DB, error) {
 		&model.CourseMaterial{},
 		&model.CourseMaterialLike{},
 		&model.Notification{},
+		&api.ChatMessage{},
 	); err != nil {
 		return nil, err
 	}
