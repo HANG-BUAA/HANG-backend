@@ -55,7 +55,7 @@ func (m *PostDao) ConvertPostModelToOverviewDTO(post *model.Post, userID uint) (
 	return &dto.PostOverviewDTO{
 		ID: post.ID,
 		Author: dto.PostAuthorDTO{
-			UserID:     utils.IfThenElse(post.IsAnonymous, uint(0), userID).(uint),
+			UserID:     utils.IfThenElse(post.IsAnonymous, uint(0), post.UserID).(uint),
 			UserName:   userName,
 			UserAvatar: userAvatar,
 		},
